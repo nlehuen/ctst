@@ -15,7 +15,7 @@
 */
 #include <string.h>
 
-int ctst_max_bytes_per_node = 8; 
+const size_t ctst_max_bytes_per_node = 8; 
 
 struct struct_ctst_storage {
 	char dummy;

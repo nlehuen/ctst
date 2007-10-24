@@ -15,8 +15,8 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
 struct struct_ctst_ctst {
   ctst_storage* storage;
   ctst_node_ref root;
-  int size;
-  int total_key_length;
+  size_t size;
+  size_t total_key_length;
 };
 
 typedef struct struct_ctst_balance_info {
@@ -136,7 +136,7 @@ ctst_node_ref _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_ind
 }
 
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index) {
-  int local_size = bytes_length - local_index;
+  size_t local_size = bytes_length - local_index;
   if(local_size>ctst_max_bytes_per_node) {
     local_size = ctst_max_bytes_per_node;
     return ctst_storage_node_alloc(ctst->storage,0,_ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size),0,0,bytes,bytes_index+local_index,local_size);    

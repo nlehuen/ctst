@@ -9,9 +9,14 @@
   This file defines the storage interface.
 */
 
-extern int ctst_max_bytes_per_node;
-typedef struct struct_ctst_storage ctst_storage;
+/* This is the maximum number of bytes that can be stored
+   in a single node. The exact value depends on the storage
+   implementation. */
+extern const size_t ctst_max_bytes_per_node;
 
+/* This is the structure storing data about the storage. There
+   again, its contents depends on the implementation. */
+typedef struct struct_ctst_storage ctst_storage;
 
 typedef struct struct_ctst_tworefs {
   ctst_node_ref ref1;
