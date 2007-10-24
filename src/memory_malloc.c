@@ -131,4 +131,22 @@ ctst_node_ref ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref node, 
   return node;
 }
 
+/* Special node operations */
+
+ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t node_index) {
+  ctst_two_node_refs result;
+  
+  result.ref1 = node;
+  result.ref2 = ctst_storage_node_alloc(storage, node->data, node->next, node->left, node->right, node->bytes, node_index+1, node->bytes_length-node_index-1);
+  
+  node->data = 0;
+  node->next = result.ref2;
+  node->left = 0;
+  node->right = 0; 
+  node->bytes_length = node_index+1;
+  realloc(node->bytes,node->bytes_length);
+  
+  return result;
+}
+
 #endif

@@ -18,10 +18,10 @@ extern const size_t ctst_max_bytes_per_node;
    again, its contents depends on the implementation. */
 typedef struct struct_ctst_storage ctst_storage;
 
-typedef struct struct_ctst_tworefs {
+typedef struct struct_ctst_two_node_refs {
   ctst_node_ref ref1;
   ctst_node_ref ref2;
-} ctst_tworefs;
+} ctst_two_node_refs;
 
 /* Storage allocation / deallocation */
 ctst_storage* ctst_storage_alloc();
@@ -49,8 +49,8 @@ ctst_node_ref ctst_storage_set_right(ctst_storage* storage, ctst_node_ref node, 
 ctst_node_ref ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes, size_t bytes_index, size_t bytes_length);
 
 /* Special node operations */
-ctst_tworefs ctst_storage_swap_bytes(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
+ctst_two_node_refs ctst_storage_swap_bytes(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
 void ctst_storage_swap_last_byte(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
-ctst_tworefs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
+ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t node_index);
 
 #endif
