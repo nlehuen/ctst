@@ -23,6 +23,13 @@ int main(int argc, char** argv) {
   
   ctst_storage_node_free(storage,node);
   
+  ctst_ctst* ctst = ctst_alloc(storage);
+  
+  ctst_set(ctst,"The answer to your question is",0,307,42);
+  printf("%*s %d\n",30,"The answer to your question is",ctst_get(ctst,"The answer to your question is",0,30));
+  
+  ctst_free(ctst);  
+  
   ctst_storage_free(storage);
   
   return 0;

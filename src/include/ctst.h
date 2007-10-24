@@ -23,4 +23,14 @@
 
 #include "storage.h"
 
+typedef struct struct_ctst_ctst ctst_ctst;
+
+/* ctst allocation / deallocation */
+ctst_ctst* ctst_alloc(ctst_storage* storage);
+void ctst_free(ctst_ctst* ctst);
+
+/* Basic accessors : get and set */
+ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length);
+ctst_data ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data);
+
 #endif
