@@ -9,7 +9,9 @@
   This file defines the storage interface.
 */
 
+extern int ctst_max_bytes_per_node;
 typedef struct struct_ctst_storage ctst_storage;
+
 
 typedef struct struct_ctst_tworefs {
   ctst_node_ref ref1;

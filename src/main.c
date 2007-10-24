@@ -27,6 +27,11 @@ int main(int argc, char** argv) {
   ctst_set(ctst,"The answer to your question is",0,30,42);
   printf("%*s %d\n",30,"The answer to your question is",ctst_get(ctst,"The answer to your question is",0,30));
   
+  printf("Number of entries: %d\nTotal length of keys: %d\n",
+    ctst_get_size(ctst),
+    ctst_get_total_key_length(ctst)
+  );
+  
   ctst_free(ctst);  
   ctst_storage_free(storage);
   
