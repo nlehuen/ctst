@@ -1,3 +1,5 @@
+#ifndef __CTST_CTST_H__
+#define __CTST_CTST_H__
 /*
   ctst - (c) 2007 Nicolas Lehuen
   This is released under the LGPL - see http://www.gnu.org/licenses/lgpl.html
@@ -6,11 +8,18 @@
 
   This file contains general definitions
 */
-#ifndef __CTST_CTST_H__
-#define __CTST_CTST_H__
 
-typedef unsigned int ctst_data;
-typedef unsigned int ctst_node_ref;
+typedef unsigned int size_t;
+
+#define CTST_STORAGE_TYPE_MEMORY_MALLOC
+
+#ifdef CTST_STORAGE_TYPE_MEMORY_MALLOC
+  #include "memory_malloc.h"
+#endif
+
+#ifdef CTST_STORAGE_TYPE_MEMORY_SMART
+  #include "memory_smart.h"
+#endif
 
 #include "storage.h"
 

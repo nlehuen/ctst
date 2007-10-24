@@ -1,3 +1,5 @@
+#ifndef __CTST_STORAGE_H__
+#define __CTST_STORAGE_H__
 /*
   ctst - (c) 2007 Nicolas Lehuen
   This is released under the LGPL - see http://www.gnu.org/licenses/lgpl.html
@@ -6,13 +8,8 @@
 
   This file defines the storage interface.
 */
-#ifndef __CTST_STORAGE_H__
-#define __CTST_STORAGE_H__
 
-typedef struct struct_ctst_storage {
-  unsigned int n_blocks;
-  char** blocks;
-} ctst_storage;
+typedef struct struct_ctst_storage ctst_storage;
 
 typedef struct struct_ctst_tworefs {
   ctst_node_ref ref1;
