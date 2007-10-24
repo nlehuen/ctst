@@ -83,8 +83,15 @@ inline size_t ctst_storage_get_bytes_length(ctst_storage* storage, ctst_node_ref
   return node->bytes_length;
 }
 
-inline char* ctst_storage_get_bytes(ctst_storage* storage, ctst_node_ref node) {
+inline char ctst_storage_get_byte(ctst_storage* storage, ctst_node_ref node,size_t byte_index) {
+  return node->bytes[byte_index];
+}
+
+inline char* ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node) {
   return node->bytes;
+}
+
+inline void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes) {
 }
 
 /* Node attribute writing */

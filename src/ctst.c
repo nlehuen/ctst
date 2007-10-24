@@ -29,8 +29,8 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
   size_t index = 0;
   
   while(node!=0) {
-    /* We load the data from the node into local memory */
-    char* node_bytes = ctst_storage_get_bytes(ctst->storage,node);
+    /* We load the bytes from the node into local memory */
+    char* node_bytes = ctst_storage_load_bytes(ctst->storage,node);
     int node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,node);
 
     int local_index=0;
@@ -47,6 +47,9 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
           break;
       }
     } 
+
+    /* We unload the bytes from local memory */
+    ctst_storage_unload_bytes(ctst->storage,node,node_bytes);
     
     if (diff != 0) {
       /* We got a mismatch. */
