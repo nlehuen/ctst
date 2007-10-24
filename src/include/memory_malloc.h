@@ -13,6 +13,6 @@
 
 typedef struct struct_ctst_node ctst_node;
 typedef ctst_node* ctst_node_ref;
-typedef void* ctst_data;
+typedef int ctst_data;
 
 #endif

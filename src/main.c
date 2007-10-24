@@ -12,9 +12,17 @@
 
 int main(int argc, char** argv) {
   ctst_storage* storage = ctst_storage_alloc();
-  ctst_node_ref node = ctst_storage_node_alloc(storage,0,0,0,0,"Hello, world !\n",0,15);
+  
+  ctst_node_ref node = ctst_storage_node_alloc(storage,0,0,0,0,"Hello, world !",0,14);
+  
   printf("%*s\n",ctst_storage_get_bytes_length(storage,node),ctst_storage_get_bytes(storage,node));
+  
+  node = ctst_storage_set_data(storage,node,42);
+  node = ctst_storage_set_bytes(storage,node,"The answer to your question is",0,30);
+  printf("%*s %d\n",ctst_storage_get_bytes_length(storage,node),ctst_storage_get_bytes(storage,node),ctst_storage_get_data(storage,node));
+  
   ctst_storage_node_free(storage,node);
+  
   ctst_storage_free(storage);
   
   return 0;

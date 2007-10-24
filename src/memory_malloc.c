@@ -48,18 +48,36 @@ ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, cts
   result->left = left;
   result->right = right;
   result->bytes_length = bytes_length;
-  result->bytes = malloc(bytes_length);
+  result->bytes = (char*)malloc(bytes_length);
   memcpy(result->bytes,bytes+bytes_index,bytes_length);
   
   return result;
 }
 
 void ctst_storage_node_free(ctst_storage* storage, ctst_node_ref node) {
-  free(node->bytes);
+  if(node->bytes_length>0) {
+    free(node->bytes);
+  }
   free(node);
 }
 
 /* Node attribute reading */
+
+inline ctst_data ctst_storage_get_data(ctst_storage* storage, ctst_node_ref node) {
+  return node->data;
+}
+
+inline ctst_node_ref ctst_storage_get_next(ctst_storage* storage, ctst_node_ref node) {
+  return node->next;
+}
+
+inline ctst_node_ref ctst_storage_get_left(ctst_storage* storage, ctst_node_ref node) {
+  return node->left;
+}
+
+inline ctst_node_ref ctst_storage_get_right(ctst_storage* storage, ctst_node_ref node) {
+  return node->right;
+}
 
 inline size_t ctst_storage_get_bytes_length(ctst_storage* storage, ctst_node_ref node) {
   return node->bytes_length;
@@ -67,6 +85,40 @@ inline size_t ctst_storage_get_bytes_length(ctst_storage* storage, ctst_node_ref
 
 inline char* ctst_storage_get_bytes(ctst_storage* storage, ctst_node_ref node) {
   return node->bytes;
+}
+
+/* Node attribute writing */
+
+inline ctst_node_ref ctst_storage_set_data(ctst_storage* storage, ctst_node_ref node, ctst_data data) {
+  node->data = data;
+  return node;
+}
+
+inline ctst_node_ref ctst_storage_set_next(ctst_storage* storage, ctst_node_ref node, ctst_node_ref next) {
+  node->next = next;
+  return node;
+}
+
+inline ctst_node_ref ctst_storage_set_left(ctst_storage* storage, ctst_node_ref node, ctst_node_ref left) {
+  node->left = left;
+  return node;
+}
+
+inline ctst_node_ref ctst_storage_set_right(ctst_storage* storage, ctst_node_ref node, ctst_node_ref right) {
+  node->right = right;
+  return node;
+}
+
+inline ctst_node_ref ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes, size_t bytes_index, size_t bytes_length) {
+  if(node->bytes_length>0) {
+    free(node->bytes);
+  }
+  node->bytes_length = bytes_length;
+  if(bytes_length>0) {
+    node->bytes = (char*)malloc(bytes_length);
+    memcpy(node->bytes,bytes+bytes_index,bytes_length);
+  }
+  return node;
 }
 
 #endif
