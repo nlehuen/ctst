@@ -31,9 +31,9 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
   while(node!=0) {
     /* We load the bytes from the node into local memory */
     char* node_bytes = ctst_storage_load_bytes(ctst->storage,node);
-    int node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,node);
+    size_t node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,node);
 
-    int local_index=0;
+    size_t local_index=0;
     int diff=0;
     
     /* We keep advancing within the node while the bytes match */
