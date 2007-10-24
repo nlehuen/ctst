@@ -5,11 +5,11 @@ OUT:=out
 OBJS:=$(OUT)/obj
 
 # whether or not to generate the run link (yes/no)
-GEN_RUN:=yes
+GEN_RUN:=no
 
 # flags for different builds 
 BASE_FLAGS:=-Wall
-BASE_LFLAGS:=-lglut -lGL -lGLU -lm
+BASE_LFLAGS:=
 DEBUG_FLAGS:=-g
 DEBUG_LFLAGS:=
 FINAL_FLAGS:=-O3
