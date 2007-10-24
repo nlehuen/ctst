@@ -9,7 +9,7 @@
   This file contains general definitions
 */
 
-typedef unsigned int size_t;
+#include <stdlib.h>
 
 #define CTST_STORAGE_TYPE_MEMORY_MALLOC
 

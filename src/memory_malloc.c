@@ -13,11 +13,9 @@
   is to be a performance reference against which better implementation
   will be measured.
 */
-#include "malloc.h"
+#include <string.h>
 
 struct struct_ctst_storage {
-  unsigned int n_blocks;
-  char** blocks;
 };
 
 struct struct_ctst_node {
@@ -29,6 +27,8 @@ struct struct_ctst_node {
   size_t        bytes_length;
 };
 
+/* Storage allocation / deallocation */
+
 ctst_storage* ctst_storage_alloc() {
   ctst_storage* storage=(ctst_storage*)malloc(sizeof(ctst_storage));
   return storage;
@@ -36,6 +36,37 @@ ctst_storage* ctst_storage_alloc() {
 
 void ctst_storage_free(ctst_storage* storage) {
   free(storage);
+}
+
+/* Node allocation / deallocation */
+
+ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, ctst_node_ref next, ctst_node_ref left, ctst_node_ref right, char* bytes, size_t bytes_index, size_t bytes_length) {
+  ctst_node_ref result=(ctst_node_ref)malloc(sizeof(ctst_node));
+  
+  result->data = data;
+  result->next = next;
+  result->left = left;
+  result->right = right;
+  result->bytes_length = bytes_length;
+  result->bytes = malloc(bytes_length);
+  memcpy(result->bytes,bytes+bytes_index,bytes_length);
+  
+  return result;
+}
+
+void ctst_storage_node_free(ctst_storage* storage, ctst_node_ref node) {
+  free(node->bytes);
+  free(node);
+}
+
+/* Node attribute reading */
+
+inline size_t ctst_storage_get_bytes_length(ctst_storage* storage, ctst_node_ref node) {
+  return node->bytes_length;
+}
+
+inline char* ctst_storage_get_bytes(ctst_storage* storage, ctst_node_ref node) {
+  return node->bytes;
 }
 
 #endif
