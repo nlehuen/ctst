@@ -1,0 +1,82 @@
+# Got this from http://www.cs.oberlin.edu/~jwalker/makeTmpl/
+# don't need to actually change these varibles
+EXT:=c
+H_EXT=h
+CXX:=gcc
+RM:=rm -rf
+MKDIR:=mkdir -p
+
+# macros to move files from the source area to the objects area
+TO_OBJS=$(strip $(patsubst $(SRC)/%,$(OBJS)/%,$(1)))
+TO_SRC=$(strip $(patsubst $(OBJS)/%,$(SRC)/%,$(1)))
+
+SRC_DIRS:=$(strip $(shell find $(SRC) -type d))
+OBJS_DIRS:=$(strip $(patsubst $(SRC)/%,$(OBJS)/%,$(SRC_DIRS)))
+ALL_CODE_FILES:=$(strip $(foreach DIR,$(SRC_DIRS), $(wildcard $(DIR)/*.$(EXT))))
+ALL_OBJECT_FILES:=$(strip $(addsuffix .o, $(basename $(call TO_OBJS,$(ALL_CODE_FILES)))))
+ALL_HEADER_FILES:=$(strip $(foreach DIR,$(SRC_DIRS), $(wildcard $(DIR)/*.$(H_EXT))))
+ALL_SRC_FILES:=$(ALL_CODE_FILES) $(ALL_HEADER_FILES)
+
+.PHONY: world prebuild postbuild clean final run restore backup
+
+# Make everything in debug
+world: CXXFLAGS:=$(BASE_FLAGS) $(DEBUG_FLAGS)
+world: CXXLFLAGS:=$(BASE_LFLAGS) $(DEBUG_LFLAGS)
+world: $(OUT)/depend.mk prebuild $(TARGET) postbuild
+
+# Make a final build
+final: CXXFLAGS:=$(BASE_FLAGS) $(FINAL_FLAGS)
+final: CXXLFLAGS:=$(BASE_LFLAGS) $(FINAL_LFLAGS)
+final: clean $(OUT)/depend.mk prebuild $(TARGET) postbuild
+	$(RM) $(OBJS)
+
+# Make and run
+run: world
+	$(TARGET)
+
+# Make everything go away (be clean)
+clean:
+	$(RM) run
+	$(RM) $(OUT)
+	$(RM) $(TARGET)
+	clear
+	@ls --color
+
+# Restore the most recent temp backup
+restore:
+	-mv -i $(SRC) $(SRC).old
+	tar -xzf backup/current-build.tar.gz
+
+backup: 
+	@$(MKDIR)  backup/
+	@tar -czf backup/$(basename $(notdir $(TARGET)))-`date +%Y-%m-%d-%H%M`.tar.gz $(SRC)/
+	@echo "Backup Successful!"
+
+# This is the actual code dependencies section
+$(TARGET): $(ALL_OBJECT_FILES)
+	$(CXX) $(CXXFLAGS) $(CXXLFLAGS) $+ -o $@
+
+%.o:
+	$(CXX) $(CXXFLAGS) -c $(call TO_SRC,$(basename $@).$(EXT)) -o $@
+
+-include $(OUT)/depend.mk
+
+# Support dependecies
+$(OUT)/depend.mk: $(ALL_SRC_FILES)
+	@$(MKDIR) $(OUT)
+	@$(RM) $(OUT)/depend.mk
+	set -e; $(CXX) -MM $(ALL_CODE_FILES) | sed -e "s,\.$(EXT)\.o,\.o," -e "s|^\(.*\)\.o: $(SRC)/\([^ ]*/\)\([^ /]*\)|\2\1.o: $(SRC)/\2\3|" -e "s,.*\.o,$(OBJS)/&," >> $(OUT)/depend.mk	
+
+prebuild:
+#	clear
+	@$(MKDIR) $(OBJS)
+	@for dir in $(OBJS_DIRS); do $(MKDIR) $${dir}; done
+
+postbuild:
+ifeq ($(GEN_RUN),yes)
+	@ln -sf $(TARGET) run
+endif
+	@$(MKDIR)  backup/
+	-@mv -f backup/$(basename $(notdir $(TARGET)))-last-build.tar.gz backup/$(basename $(notdir $(TARGET)))-last-build.tar.gz.old
+	@tar -czf backup/$(basename $(notdir $(TARGET)))-last-build.tar.gz $(SRC)/
+	@$(RM) backup/$(basename $(notdir $(TARGET)))-last-build.tar.gz.old
