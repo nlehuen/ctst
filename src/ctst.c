@@ -28,6 +28,7 @@ typedef struct struct_ctst_balance_info {
 ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
 ctst_balance_info _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node);
+void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
 
 /* ctst allocation / deallocation */
 
@@ -162,6 +163,7 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
 
     if(diff!=0) {
       ctst_balance_info left_balance_info;
+      
       ctst_balance_info right_balance_info;
     
       if(node_index<node_bytes_length-1) {
@@ -179,6 +181,8 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
       
       balance_info.node = node;
       if(diff>0) {
+        /* We need to grow the left branch */
+        
         ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
         ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
 
@@ -190,6 +194,8 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
         right_balance_info = _ctst_compute_balance(ctst,right); 
       }
       else {
+        /* We need to grow the right branch */
+        
         ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
         ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
 
@@ -201,7 +207,7 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
         balance_info.did_balance = right_balance_info.did_balance;
       }
       
-      
+      /* Now we can compute the balance for this node. */        
       if(ctst_storage_get_bytes_length(ctst->storage,node)>1) {
         balance_info.height = 1;
         balance_info.balance = 0;
@@ -215,6 +221,17 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
           balance_info.height = right_balance_info.height + 1;
         }
       }
+      balance_info.left_balance = left_balance_info.balance;
+      balance_info.right_balance = right_balance_info.balance;
+      
+      if(balance_info.did_balance==0) {
+        _ctst_balance_node(ctst,&balance_info);
+      }
+    }
+    else if (node_index == node_bytes_length) {
+      /* TODO : continue here */
+    }
+    else {
       /* TODO : continue here */
     }
 
@@ -273,4 +290,8 @@ ctst_balance_info _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node) {
     }
   }
   return result;
+}
+
+void _ctst_balance_node(ctst_ctst* ctst,ctst_balance_info* balance_info) {
+  /* TODO : implement this */
 }
