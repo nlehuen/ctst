@@ -25,9 +25,9 @@ typedef struct struct_ctst_balance_info {
 } ctst_balance_info;
 
 /* Private functions of this module */
-void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, ctst_balance_info* balance_info, size_t local_index);
+void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_balance_info* balance_info, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
-void _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node, ctst_balance_info* balance_info);
+void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* balance_info);
 void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
 
 /* ctst allocation / deallocation */
@@ -125,11 +125,14 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
 
 void ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data) {
   ctst_balance_info result;
-  _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,ctst->root,&result,0);
+  result.node = ctst->root;
+  _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&result,0);
   ctst->root = result.node;
 }
 
-void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, ctst_balance_info* balance_info, size_t local_index) {
+void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, ctst_balance_info* balance_info, size_t local_index) {
+  ctst_node_ref node = balance_info->node;
+  
   if(node==0) {
     balance_info->node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index);
     balance_info->did_balance=0;
@@ -172,31 +175,28 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
         if(splitted.ref2 != joined) {
           node = ctst_storage_set_next(ctst->storage,node,joined); 
         }
+        balance_info->node = node;
       }
       
-      balance_info->node = node;
+      left_balance_info.node = ctst_storage_get_left(ctst->storage,node);
+      right_balance_info.node = ctst_storage_get_right(ctst->storage,node);
+
       if(diff>0) {
         /* We need to grow the left branch */
-        
-        ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
-        ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
 
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,left,&left_balance_info,local_index);
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&left_balance_info,local_index);
         node = ctst_storage_set_left(ctst->storage, node, left_balance_info.node);
         balance_info->node = node;
         balance_info->did_balance = left_balance_info.did_balance;
         
-        _ctst_compute_balance(ctst,right,&right_balance_info); 
+        _ctst_compute_balance(ctst,&right_balance_info); 
       }
       else {
         /* We need to grow the right branch */
-        
-        ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
-        ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
 
-        _ctst_compute_balance(ctst,left,&left_balance_info); 
+        _ctst_compute_balance(ctst,&left_balance_info); 
 
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,right,&right_balance_info,local_index);
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&right_balance_info,local_index);
         node = ctst_storage_set_right(ctst->storage, node, right_balance_info.node);
         balance_info->node = node;
         balance_info->did_balance = right_balance_info.did_balance;
@@ -230,18 +230,21 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
         /* We also reached the end of the key, therefore we are in the right
            place to insert the data ! */
         node = ctst_storage_set_data(ctst->storage, node, data);
+        balance_info->node = node;
       }
       else {
         /* We haven't finished the key, so we go to the next node */
         ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,node); 
         ctst_balance_info next_info;
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,previous_next,&next_info,local_index);
+        next_info.node = previous_next;
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&next_info,local_index);
         if(previous_next!=next_info.node) {
           node = ctst_storage_set_next(ctst->storage,node,next_info.node); 
+          balance_info->node = node;
         }
       }
 
-      _ctst_compute_balance(ctst, node, balance_info);
+      _ctst_compute_balance(ctst, balance_info);
     }
     else {
       /* We reached the end of the key, but not the end of the bytes
@@ -283,9 +286,8 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
   }
 }
 
-void _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node,ctst_balance_info* result) {
-  if(node==0) {
-    result->node=0;
+void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* result) {
+  if(result->node==0) {
     result->did_balance=0;
     result->height=0;
     result->balance=0;
@@ -293,8 +295,7 @@ void _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node,ctst_balance_info
     result->right_balance=0;
   }
   else {
-    if(ctst_storage_get_bytes_length(ctst->storage,node)>1) {
-      result->node=node;
+    if(ctst_storage_get_bytes_length(ctst->storage,result->node)>1) {
       result->did_balance=0;
       result->height=1;
       result->balance=0;
@@ -304,11 +305,13 @@ void _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node,ctst_balance_info
     else {
       ctst_balance_info left;
       ctst_balance_info right;
-      
-      _ctst_compute_balance(ctst, ctst_storage_get_left(ctst->storage, node), &left);
-      _ctst_compute_balance(ctst, ctst_storage_get_right(ctst->storage, node), &right);
 
-      result->node = node;
+      left.node = ctst_storage_get_left(ctst->storage, result->node);
+      right.node = ctst_storage_get_right(ctst->storage, result->node);
+      
+      _ctst_compute_balance(ctst, &left);
+      _ctst_compute_balance(ctst, &right);
+
       result->did_balance=0;
       result->balance = left.height - right.height;
       if(result->balance>=0) {
