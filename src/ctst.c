@@ -25,9 +25,9 @@ typedef struct struct_ctst_balance_info {
 } ctst_balance_info;
 
 /* Private functions of this module */
-ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, size_t local_index);
+void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, ctst_balance_info* balance_info, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
-ctst_balance_info _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node);
+void _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node, ctst_balance_info* balance_info);
 void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
 
 /* ctst allocation / deallocation */
@@ -124,23 +124,21 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
 }
 
 void ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data) {
-  ctst->root = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,ctst->root,0).node;
+  ctst_balance_info result;
+  _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,ctst->root,&result,0);
+  ctst->root = result.node;
 }
 
-ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, size_t local_index) {
+void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, ctst_balance_info* balance_info, size_t local_index) {
   if(node==0) {
-    ctst_balance_info balance_info;
-    balance_info.node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index);
-    balance_info.did_balance=0;
-    balance_info.height=1;
-    balance_info.balance=0;
-    balance_info.left_balance=0;
-    balance_info.right_balance=0;
-    return balance_info;
+    balance_info->node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index);
+    balance_info->did_balance=0;
+    balance_info->height=1;
+    balance_info->balance=0;
+    balance_info->left_balance=0;
+    balance_info->right_balance=0;
   }
   else {
-    ctst_balance_info balance_info;
-
     /* We load the bytes from the node into local memory */
     char* node_bytes = ctst_storage_load_bytes(ctst->storage,node);
     size_t node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,node);
@@ -161,7 +159,6 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
 
     if(diff!=0) {
       ctst_balance_info left_balance_info;
-      
       ctst_balance_info right_balance_info;
     
       if(node_index<node_bytes_length-1) {
@@ -177,19 +174,19 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
         }
       }
       
-      balance_info.node = node;
+      balance_info->node = node;
       if(diff>0) {
         /* We need to grow the left branch */
         
         ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
         ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
 
-        left_balance_info = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,left,local_index);
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,left,&left_balance_info,local_index);
         node = ctst_storage_set_left(ctst->storage, node, left_balance_info.node);
-        balance_info.node = node;
-        balance_info.did_balance = left_balance_info.did_balance;
+        balance_info->node = node;
+        balance_info->did_balance = left_balance_info.did_balance;
         
-        right_balance_info = _ctst_compute_balance(ctst,right); 
+        _ctst_compute_balance(ctst,right,&right_balance_info); 
       }
       else {
         /* We need to grow the right branch */
@@ -197,33 +194,33 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
         ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
         ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
 
-        left_balance_info = _ctst_compute_balance(ctst,left); 
+        _ctst_compute_balance(ctst,left,&left_balance_info); 
 
-        right_balance_info = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,right,local_index);
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,right,&right_balance_info,local_index);
         node = ctst_storage_set_right(ctst->storage, node, right_balance_info.node);
-        balance_info.node = node;
-        balance_info.did_balance = right_balance_info.did_balance;
+        balance_info->node = node;
+        balance_info->did_balance = right_balance_info.did_balance;
       }
       
       /* Now we can compute the balance for this node. */        
       if(ctst_storage_get_bytes_length(ctst->storage,node)>1) {
-        balance_info.height = 1;
-        balance_info.balance = 0;
+        balance_info->height = 1;
+        balance_info->balance = 0;
       }
       else {
-        balance_info.balance = left_balance_info.height - right_balance_info.height;
-        if(balance_info.balance>=0) {
-          balance_info.height = left_balance_info.height + 1;
+        balance_info->balance = left_balance_info.height - right_balance_info.height;
+        if(balance_info->balance>=0) {
+          balance_info->height = left_balance_info.height + 1;
         }
         else {
-          balance_info.height = right_balance_info.height + 1;
+          balance_info->height = right_balance_info.height + 1;
         }
       }
-      balance_info.left_balance = left_balance_info.balance;
-      balance_info.right_balance = right_balance_info.balance;
+      balance_info->left_balance = left_balance_info.balance;
+      balance_info->right_balance = right_balance_info.balance;
       
-      if(balance_info.did_balance==0) {
-        _ctst_balance_node(ctst,&balance_info);
+      if(balance_info->did_balance==0) {
+        _ctst_balance_node(ctst,balance_info);
       }
     }
     else if (node_index == node_bytes_length) {
@@ -237,13 +234,14 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
       else {
         /* We haven't finished the key, so we go to the next node */
         ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,node); 
-        ctst_balance_info next_info = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,previous_next,local_index);
+        ctst_balance_info next_info;
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,previous_next,&next_info,local_index);
         if(previous_next!=next_info.node) {
           node = ctst_storage_set_next(ctst->storage,node,next_info.node); 
         }
       }
 
-      balance_info = _ctst_compute_balance(ctst, node);
+      _ctst_compute_balance(ctst, node, balance_info);
     }
     else {
       /* We reached the end of the key, but not the end of the bytes
@@ -259,14 +257,12 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
 
       node = ctst_storage_set_data(ctst->storage,node,data);
   
-      balance_info.node = node;
-      balance_info.height = 1;
-      balance_info.did_balance = 1;
-      balance_info.left_balance = 0;
-      balance_info.right_balance = 0;
+      balance_info->node = node;
+      balance_info->height = 1;
+      balance_info->did_balance = 1;
+      balance_info->left_balance = 0;
+      balance_info->right_balance = 0;
     }
-
-    return balance_info;
   }
 }
 
@@ -287,43 +283,44 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
   }
 }
 
-ctst_balance_info _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node) {
-  ctst_balance_info result;
+void _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node,ctst_balance_info* result) {
   if(node==0) {
-    result.node=0;
-    result.did_balance=0;
-    result.height=0;
-    result.balance=0;
-    result.left_balance=0;
-    result.right_balance=0;
+    result->node=0;
+    result->did_balance=0;
+    result->height=0;
+    result->balance=0;
+    result->left_balance=0;
+    result->right_balance=0;
   }
   else {
     if(ctst_storage_get_bytes_length(ctst->storage,node)>1) {
-      result.node=node;
-      result.did_balance=0;
-      result.height=1;
-      result.balance=0;
-      result.left_balance=0;
-      result.right_balance=0;
+      result->node=node;
+      result->did_balance=0;
+      result->height=1;
+      result->balance=0;
+      result->left_balance=0;
+      result->right_balance=0;
     }
     else {
-      ctst_balance_info left = _ctst_compute_balance(ctst, ctst_storage_get_left(ctst->storage, node));
-      ctst_balance_info right = _ctst_compute_balance(ctst, ctst_storage_get_right(ctst->storage, node));
+      ctst_balance_info left;
+      ctst_balance_info right;
       
-      result.node = node;
-      result.did_balance=0;
-      result.balance = left.height - right.height;
-      if(result.balance>=0) {
-        result.height=left.height+1;
+      _ctst_compute_balance(ctst, ctst_storage_get_left(ctst->storage, node), &left);
+      _ctst_compute_balance(ctst, ctst_storage_get_right(ctst->storage, node), &right);
+
+      result->node = node;
+      result->did_balance=0;
+      result->balance = left.height - right.height;
+      if(result->balance>=0) {
+        result->height=left.height+1;
       }
       else {
-        result.height=right.height+1;
+        result->height=right.height+1;
       }
-      result.left_balance=left.balance;
-      result.right_balance=right.balance;
+      result->left_balance=left.balance;
+      result->right_balance=right.balance;
     }
   }
-  return result;
 }
 
 void _ctst_balance_node(ctst_ctst* ctst,ctst_balance_info* balance_info) {
