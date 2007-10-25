@@ -169,7 +169,7 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
            need to split the node */
         ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,node,node_index);
         
-		/* Maybe the next node can be joined, following the split */
+        /* Maybe the next node can be joined, following the split */
         ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
         node = splitted.ref1;
         if(splitted.ref2 != joined) {
@@ -243,27 +243,27 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
         }
       }
 
-	  balance_info = _ctst_compute_balance(ctst, node);
+      balance_info = _ctst_compute_balance(ctst, node);
     }
     else {
       /* We reached the end of the key, but not the end of the bytes
-	     for this node. Therefore, we need to split this node. */
-		ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,node,local_index - 1);
+       for this node. Therefore, we need to split this node. */
+      ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,node,local_index - 1);
 
-		/* Maybe the next node can be joined, following the split */
-        ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
-        node = splitted.ref1;
-        if(splitted.ref2 != joined) {
-          node = ctst_storage_set_next(ctst->storage,node,joined); 
-        }
+      /* Maybe the next node can be joined, following the split */
+      ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
+      node = splitted.ref1;
+      if(splitted.ref2 != joined) {
+        node = ctst_storage_set_next(ctst->storage,node,joined); 
+      }
 
-		node = ctst_storage_set_data(ctst->storage,node,data);
-
-		balance_info.node = node;
-		balance_info.height = 1;
-		balance_info.did_balance = 1;
-		balance_info.left_balance = 0;
-		balance_info.right_balance = 0;
+      node = ctst_storage_set_data(ctst->storage,node,data);
+  
+      balance_info.node = node;
+      balance_info.height = 1;
+      balance_info.did_balance = 1;
+      balance_info.left_balance = 0;
+      balance_info.right_balance = 0;
     }
 
     return balance_info;
@@ -278,10 +278,10 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
     local_size = ctst_max_bytes_per_node;
     next = _ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size);
  
-	return ctst_storage_node_alloc(ctst->storage,0,next,0,0,bytes,bytes_index+local_index,local_size);    
+    return ctst_storage_node_alloc(ctst->storage,0,next,0,0,bytes,bytes_index+local_index,local_size);    
   }
   else {
-	ctst->size++;
+    ctst->size++;
     ctst->total_key_length+=bytes_length;
     return ctst_storage_node_alloc(ctst->storage,data,0,0,0,bytes,bytes_index+local_index,local_size);
   }
