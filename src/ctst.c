@@ -170,9 +170,9 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
         /* Since there is a mismatch before the last byte of the node, we
            need to split the node */
         ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,node,node_index);
-        /* Maybe the next node can be joined, following the split */
-        ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
         
+		/* Maybe the next node can be joined, following the split */
+        ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
         node = splitted.ref1;
         if(splitted.ref2 != joined) {
           node = ctst_storage_set_next(ctst->storage,node,joined); 
@@ -229,10 +229,43 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
       }
     }
     else if (node_index == node_bytes_length) {
-      /* TODO : continue here */
+      /* We reached the end of the bytes of the node, without differences */
+      
+      if(local_index == bytes_length) {
+        /* We also reached the end of the key, therefore we are in the right
+           place to insert the data ! */
+        node = ctst_storage_set_data(ctst->storage, node, data);
+      }
+      else {
+        /* We haven't finished the key, so we go to the next node */
+        ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,node); 
+        ctst_balance_info next_info = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,previous_next,local_index);
+        if(previous_next!=next_info.node) {
+          node = ctst_storage_set_next(ctst->storage,node,next_info.node); 
+        }
+      }
+
+	  balance_info = _ctst_compute_balance(ctst, node);
     }
     else {
-      /* TODO : continue here */
+      /* We reached the end of the key, but not the end of the bytes
+	     for this node. Therefore, we need to split this node. */
+		ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,node,local_index - 1);
+
+		/* Maybe the next node can be joined, following the split */
+        ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
+        node = splitted.ref1;
+        if(splitted.ref2 != joined) {
+          node = ctst_storage_set_next(ctst->storage,node,joined); 
+        }
+
+		node = ctst_storage_set_data(ctst->storage,node,data);
+
+		balance_info.node = node;
+		balance_info.height = 1;
+		balance_info.did_balance = 1;
+		balance_info.left_balance = 0;
+		balance_info.right_balance = 0;
     }
 
     return balance_info;
