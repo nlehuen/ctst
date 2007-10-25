@@ -27,6 +27,7 @@ typedef struct struct_ctst_balance_info {
 /* Private functions of this module */
 ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
+ctst_balance_info _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node);
 
 /* ctst allocation / deallocation */
 
@@ -160,14 +161,60 @@ ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes
     } 
 
     if(diff!=0) {
+      ctst_balance_info left_balance_info;
+      ctst_balance_info right_balance_info;
+    
       if(node_index<node_bytes_length-1) {
         /* Since there is a mismatch before the last byte of the node, we
            need to split the node */
         ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,node,node_index);
-        /* TODO : maybe the second node could be joined with its next */
+        /* Maybe the next node can be joined, following the split */
+        ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
+        
         node = splitted.ref1;
+        if(splitted.ref2 != joined) {
+          node = ctst_storage_set_next(ctst->storage,node,joined); 
+        }
       }
       
+      balance_info.node = node;
+      if(diff>0) {
+        ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
+        ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
+
+        left_balance_info = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,left,local_index);
+        node = ctst_storage_set_left(ctst->storage, node, left_balance_info.node);
+        balance_info.node = node;
+        balance_info.did_balance = left_balance_info.did_balance;
+        
+        right_balance_info = _ctst_compute_balance(ctst,right); 
+      }
+      else {
+        ctst_node_ref left = ctst_storage_get_left(ctst->storage,node);
+        ctst_node_ref right = ctst_storage_get_right(ctst->storage,node);
+
+        left_balance_info = _ctst_compute_balance(ctst,left); 
+
+        right_balance_info = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,right,local_index);
+        node = ctst_storage_set_right(ctst->storage, node, right_balance_info.node);
+        balance_info.node = node;
+        balance_info.did_balance = right_balance_info.did_balance;
+      }
+      
+      
+      if(ctst_storage_get_bytes_length(ctst->storage,node)>1) {
+        balance_info.height = 1;
+        balance_info.balance = 0;
+      }
+      else {
+        balance_info.balance = left_balance_info.height - right_balance_info.height;
+        if(balance_info.balance>=0) {
+          balance_info.height = left_balance_info.height + 1;
+        }
+        else {
+          balance_info.height = right_balance_info.height + 1;
+        }
+      }
       /* TODO : continue here */
     }
 
@@ -187,4 +234,43 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
   else {
     return ctst_storage_node_alloc(ctst->storage,data,0,0,0,bytes,bytes_index+local_index,local_size);
   }
+}
+
+ctst_balance_info _ctst_compute_balance(ctst_ctst* ctst, ctst_node_ref node) {
+  ctst_balance_info result;
+  if(node==0) {
+    result.node=0;
+    result.did_balance=0;
+    result.height=0;
+    result.balance=0;
+    result.left_balance=0;
+    result.right_balance=0;
+  }
+  else {
+    if(ctst_storage_get_bytes_length(ctst->storage,node)>1) {
+      result.node=node;
+      result.did_balance=0;
+      result.height=1;
+      result.balance=0;
+      result.left_balance=0;
+      result.right_balance=0;
+    }
+    else {
+      ctst_balance_info left = _ctst_compute_balance(ctst, ctst_storage_get_left(ctst->storage, node));
+      ctst_balance_info right = _ctst_compute_balance(ctst, ctst_storage_get_right(ctst->storage, node));
+      
+      result.node = node;
+      result.did_balance=0;
+      result.balance = left.height - right.height;
+      if(result.balance>=0) {
+        result.height=left.height+1;
+      }
+      else {
+        result.height=right.height+1;
+      }
+      result.left_balance=left.balance;
+      result.right_balance=right.balance;
+    }
+  }
+  return result;
 }
