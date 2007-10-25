@@ -51,6 +51,8 @@ ctst_node_ref ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref node, 
 /* Special node operations */
 ctst_two_node_refs ctst_storage_swap_bytes(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
 void ctst_storage_swap_last_byte(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
+
 ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t node_index);
+ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node);
 
 #endif

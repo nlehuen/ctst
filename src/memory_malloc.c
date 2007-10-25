@@ -149,4 +149,32 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
   return result;
 }
 
+ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node) {
+  if(node!=0 && node->data!=0) {
+    ctst_node_ref next = node->next;
+    if(next!=0) {
+      size_t new_bytes_length = node->bytes_length + next->bytes_length;
+      if(node->left==0 && node->right==0 && new_bytes_length <= ctst_max_bytes_per_node) {
+        /* We concatenate the bytes from the two nodes */
+        char* bytes = node->bytes;
+        realloc(bytes,new_bytes_length);
+        memcpy(bytes+node->bytes_length,next->bytes,next->bytes_length);      
+        
+        /* We'll free the bytes from the next node with this node */
+        node->bytes = next->bytes;
+        ctst_storage_node_free(storage,node);
+ 
+        /* The remaining node will be the next node */
+        next->bytes = bytes;
+        next->bytes_length = new_bytes_length;
+        
+        return next;
+      }
+    }
+    else {
+      /* TODO : finish this */
+    }
+  }
+  return node;
+}
 #endif
