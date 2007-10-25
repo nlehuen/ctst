@@ -125,8 +125,6 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
 
 void ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data) {
   ctst->root = _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,ctst->root,0).node;
-  ctst->size++;
-  ctst->total_key_length+=bytes_length;
 }
 
 ctst_balance_info _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_node_ref node, size_t local_index) {
@@ -277,11 +275,14 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
   if(local_size>ctst_max_bytes_per_node) {
     ctst_node_ref next;
 
-  local_size = ctst_max_bytes_per_node;
-  next = _ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size);
-    return ctst_storage_node_alloc(ctst->storage,0,next,0,0,bytes,bytes_index+local_index,local_size);    
+    local_size = ctst_max_bytes_per_node;
+    next = _ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size);
+ 
+	return ctst_storage_node_alloc(ctst->storage,0,next,0,0,bytes,bytes_index+local_index,local_size);    
   }
   else {
+	ctst->size++;
+    ctst->total_key_length+=bytes_length;
     return ctst_storage_node_alloc(ctst->storage,data,0,0,0,bytes,bytes_index+local_index,local_size);
   }
 }

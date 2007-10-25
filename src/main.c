@@ -14,9 +14,9 @@ int main(int argc, char** argv) {
   ctst_storage* storage = ctst_storage_alloc();
   ctst_ctst* ctst = ctst_alloc(storage);
 
-  ctst_node_ref node = ctst_storage_node_alloc(storage,0,0,0,0,"Hello, world !",0,14);
+  ctst_node_ref node = ctst_storage_node_alloc(storage,0,0,0,0,"Hello, world!",0,13);
   
-  printf("%*s\n",ctst_storage_get_bytes_length(storage,node),ctst_storage_load_bytes(storage,node));
+  printf("%d : %*s\n",ctst_storage_get_bytes_length(storage,node),ctst_storage_get_bytes_length(storage,node),ctst_storage_load_bytes(storage,node));
   
   node = ctst_storage_set_data(storage,node,42);
   node = ctst_storage_set_bytes(storage,node,"The answer to your question is",0,30);
@@ -27,11 +27,11 @@ int main(int argc, char** argv) {
   ctst_set(ctst,"The answer to your question is",0,30,42);
   printf("%*s %d\n",30,"The answer to your question is",ctst_get(ctst,"The answer to your question is",0,30));
   
-  ctst_set(ctst,"Hello, world!",0,14,57);
-  printf("%*s %d\n",14,"Hello, world!",ctst_get(ctst,"Hello, world!",0,14));
+  ctst_set(ctst,"Hello, world!",0,13,57);
+  printf("%*s %d\n",13,"Hello, world!",ctst_get(ctst,"Hello, world!",0,13));
 
-  ctst_set(ctst,"Hello, world!",0,14,62);
-  printf("%*s %d\n",14,"Hello, world!",ctst_get(ctst,"Hello, world!",0,14));
+  ctst_set(ctst,"Hello, world!",0,13,62);
+  printf("%*s %d\n",13,"Hello, world!",ctst_get(ctst,"Hello, world!",0,13));
 
   ctst_set(ctst,"The answer to your question is",0,30,42);
   printf("%*s %d\n",30,"The answer to your question is",ctst_get(ctst,"The answer to your question is",0,30));
