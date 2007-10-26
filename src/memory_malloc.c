@@ -15,10 +15,10 @@
 */
 #include <string.h>
 
-const size_t ctst_max_bytes_per_node = 8; 
+const size_t ctst_max_bytes_per_node = 1024; 
 
 struct struct_ctst_storage {
-	char dummy;
+	size_t node_count;
 };
 
 struct struct_ctst_node {
@@ -34,6 +34,7 @@ struct struct_ctst_node {
 
 ctst_storage* ctst_storage_alloc() {
   ctst_storage* storage=(ctst_storage*)malloc(sizeof(ctst_storage));
+  storage->node_count = 0;
   return storage;
 }
 
@@ -53,7 +54,9 @@ ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, cts
   result->bytes_length = bytes_length;
   result->bytes = (char*)malloc(bytes_length);
   memcpy(result->bytes,bytes+bytes_index,bytes_length);
-  
+
+  storage->node_count++;  
+
   return result;
 }
 
@@ -62,6 +65,18 @@ void ctst_storage_node_free(ctst_storage* storage, ctst_node_ref node) {
     free(node->bytes);
   }
   free(node);
+
+  storage->node_count--;
+}
+
+/* Statistics about the storage */
+
+size_t ctst_storage_node_count(ctst_storage* storage) {
+  return storage->node_count;
+}
+
+size_t ctst_storage_memory_usage(ctst_storage* storage) {
+  return sizeof(ctst_storage)+storage->node_count*sizeof(ctst_node);
 }
 
 /* Node attribute reading */
@@ -99,9 +114,10 @@ void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* 
 
 /* Node attribute writing */
 
-ctst_node_ref ctst_storage_set_data(ctst_storage* storage, ctst_node_ref node, ctst_data data) {
-  node->data = data;
-  return node;
+void ctst_storage_set_data(ctst_storage* storage, ctst_balance_info* balance_info) {
+  ctst_data old_data = balance_info->node->data;
+  balance_info->node->data = balance_info->data;
+  balance_info->data = old_data;
 }
 
 ctst_node_ref ctst_storage_set_next(ctst_storage* storage, ctst_node_ref node, ctst_node_ref next) {
@@ -150,7 +166,7 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
 }
 
 ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node) {
-  if(node!=0 && node->data!=0) {
+  if(node!=0 && node->data==0) {
     ctst_node_ref next = node->next;
     if(next!=0) {
       size_t new_bytes_length = node->bytes_length + next->bytes_length;

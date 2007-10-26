@@ -15,17 +15,9 @@ struct struct_ctst_ctst {
   size_t total_key_length;
 };
 
-typedef struct struct_ctst_balance_info {
-  ctst_node_ref node;
-  int did_balance;
-  int height;
-  int balance;
-  int left_balance;
-  int right_balance;
-} ctst_balance_info;
-
 /* Private functions of this module */
-void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data,ctst_balance_info* balance_info, size_t local_index);
+void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
+void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
 void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* balance_info);
 void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
@@ -53,6 +45,18 @@ size_t ctst_get_size(ctst_ctst* ctst) {
 
 size_t ctst_get_total_key_length(ctst_ctst* ctst) {
   return ctst->total_key_length;
+}
+
+size_t ctst_get_node_count(ctst_ctst* ctst) {
+  return ctst_storage_node_count(ctst->storage);
+}
+
+size_t ctst_get_memory_usage(ctst_ctst* ctst) {
+  return sizeof(ctst_ctst)+ctst_storage_memory_usage(ctst->storage);
+}
+
+float ctst_get_ratio(ctst_ctst* ctst) {
+  return 1.0f*ctst_get_memory_usage(ctst)/(ctst->total_key_length+ctst->size*sizeof(ctst_data));
 }
 
 /* Basic accessors : get and set */
@@ -123,16 +127,19 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
   return 0;
 }
 
-void ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data) {
+ctst_data ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data) {
   ctst_balance_info result;
   result.node = ctst->root;
-  _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&result,0);
+  result.data = data;
+  _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&result,0);
   ctst->root = result.node;
+  return result.data;
 }
 
-void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, ctst_balance_info* balance_info, size_t local_index) {
+void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length, ctst_balance_info* balance_info, size_t local_index) {
   if(balance_info->node==0) {
-    balance_info->node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index);
+    balance_info->node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,balance_info->data,local_index);
+    balance_info->data=0;
     balance_info->did_balance=0;
     balance_info->height=1;
     balance_info->balance=0;
@@ -181,8 +188,10 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
       if(diff>0) {
         /* We need to grow the left branch */
 
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&left_balance_info,local_index);
+        left_balance_info.data = balance_info->data;
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&left_balance_info,local_index);
         balance_info->node = ctst_storage_set_left(ctst->storage, balance_info->node, left_balance_info.node);
+        balance_info->data = left_balance_info.data;
         balance_info->did_balance = left_balance_info.did_balance;
         
         _ctst_compute_balance(ctst,&right_balance_info); 
@@ -192,8 +201,10 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
 
         _ctst_compute_balance(ctst,&left_balance_info); 
 
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&right_balance_info,local_index);
+        right_balance_info.data = balance_info->data;
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&right_balance_info,local_index);
         balance_info->node = ctst_storage_set_right(ctst->storage, balance_info->node, right_balance_info.node);
+        balance_info->data=right_balance_info.data;
         balance_info->did_balance = right_balance_info.did_balance;
       }
       
@@ -224,14 +235,16 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
       if(local_index == bytes_length) {
         /* We also reached the end of the key, therefore we are in the right
            place to insert the data ! */
-        balance_info->node = ctst_storage_set_data(ctst->storage, balance_info->node, data);
+        ctst_storage_set_data(ctst->storage, balance_info);
       }
       else {
         /* We haven't finished the key, so we go to the next node */
         ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,balance_info->node); 
         ctst_balance_info next_info;
         next_info.node = previous_next;
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,data,&next_info,local_index);
+        next_info.data = balance_info->data;
+        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&next_info,local_index);
+        balance_info->data = next_info.data;
         if(previous_next!=next_info.node) {
           balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,next_info.node); 
         }
@@ -251,11 +264,139 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
         balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,joined); 
       }
 
-      balance_info->node = ctst_storage_set_data(ctst->storage,balance_info->node,data);
+      ctst_storage_set_data(ctst->storage,balance_info);
       balance_info->height = 1;
       balance_info->did_balance = 1;
       balance_info->left_balance = 0;
       balance_info->right_balance = 0;
+    }
+  }
+}
+
+ctst_data ctst_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length) {
+  ctst_balance_info result;
+  result.node = ctst->root;
+  result.data = 0;
+  _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&result,0);
+  ctst->root = result.node;
+  return result.data;
+}
+
+void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length, ctst_balance_info* balance_info, size_t local_index) {
+  if(balance_info->node==0) {
+    return;
+  }
+  else {
+    /* We load the bytes from the node into local memory */
+    char* node_bytes = ctst_storage_load_bytes(ctst->storage,balance_info->node);
+    size_t node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,balance_info->node);
+
+    size_t node_index = 0;
+    int diff = 0;
+    
+    /* We keep advancing within the node while the bytes match */
+    while (node_index < node_bytes_length && local_index < bytes_length) {
+      diff = bytes[bytes_index+local_index] - node_bytes[node_index];
+      if (diff == 0) {
+          local_index++;
+          node_index++;
+      } else {
+          break;
+      }
+    } 
+
+    if(diff!=0) {
+      ctst_balance_info left_balance_info;
+      ctst_balance_info right_balance_info;
+    
+      if(node_index<node_bytes_length-1) {
+        /* Since there is a mismatch before the last byte of the node, we
+           bail out, the key isn't in the tree. */
+        return;
+      }
+      
+      left_balance_info.node = ctst_storage_get_left(ctst->storage,balance_info->node);
+      right_balance_info.node = ctst_storage_get_right(ctst->storage,balance_info->node);
+
+      if(diff>0) {
+        /* We need to follow the left branch */
+
+        left_balance_info.data = balance_info->data;
+        _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&left_balance_info,local_index);
+        balance_info->node = ctst_storage_set_left(ctst->storage, balance_info->node, left_balance_info.node);
+        balance_info->data = left_balance_info.data;
+        balance_info->did_balance = left_balance_info.did_balance;
+        
+        _ctst_compute_balance(ctst,&right_balance_info); 
+      }
+      else {
+        /* We need to follow the right branch */
+
+        _ctst_compute_balance(ctst,&left_balance_info); 
+
+        right_balance_info.data = balance_info->data;
+        _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&right_balance_info,local_index);
+        balance_info->node = ctst_storage_set_right(ctst->storage, balance_info->node, right_balance_info.node);
+        balance_info->data=right_balance_info.data;
+        balance_info->did_balance = right_balance_info.did_balance;
+      }
+      
+      /* There we check whether we can get rid of this node */
+      balance_info->node = ctst_storage_join_nodes(ctst->storage,balance_info->node);
+
+      /* Now we can compute the balance for this node. */        
+      if(ctst_storage_get_bytes_length(ctst->storage,balance_info->node)>1) {
+        balance_info->height = 1;
+        balance_info->balance = 0;
+      }
+      else {
+        balance_info->balance = left_balance_info.height - right_balance_info.height;
+        if(balance_info->balance>=0) {
+          balance_info->height = left_balance_info.height + 1;
+        }
+        else {
+          balance_info->height = right_balance_info.height + 1;
+        }
+      }
+      balance_info->left_balance = left_balance_info.balance;
+      balance_info->right_balance = right_balance_info.balance;
+      
+      if(balance_info->did_balance==0) {
+        _ctst_balance_node(ctst,balance_info);
+      }
+    }
+    else if (node_index == node_bytes_length) {
+      /* We reached the end of the bytes of the node, without differences */
+      
+      if(local_index == bytes_length) {
+        /* We also reached the end of the key, therefore we are in the right
+           place to remove the data ! */
+        ctst_storage_set_data(ctst->storage, balance_info);
+        ctst->size--;
+        ctst->total_key_length-=bytes_length;
+      }
+      else {
+        /* We haven't finished the key, so we go to the next node */
+        ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,balance_info->node); 
+        ctst_balance_info next_info;
+        next_info.node = previous_next;
+        next_info.data = balance_info->data;
+        _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&next_info,local_index);
+        balance_info->data = next_info.data;
+        if(previous_next!=next_info.node) {
+          balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,next_info.node); 
+        }
+      }
+
+      /* There we check whether we can get rid of this node */
+      balance_info->node = ctst_storage_join_nodes(ctst->storage,balance_info->node);
+
+      _ctst_compute_balance(ctst, balance_info);
+    }
+    else {
+      /* We reached the end of the key, but not the end of the bytes
+       for this node. Therefore, the key is not in the tree. */
+      return;
     }
   }
 }

@@ -23,6 +23,16 @@ typedef struct struct_ctst_two_node_refs {
   ctst_node_ref ref2;
 } ctst_two_node_refs;
 
+typedef struct struct_ctst_balance_info {
+  ctst_node_ref node;
+  ctst_data data;
+  int did_balance;
+  int height;
+  int balance;
+  int left_balance;
+  int right_balance;
+} ctst_balance_info;
+
 /* Storage allocation / deallocation */
 ctst_storage* ctst_storage_alloc();
 void ctst_storage_free(ctst_storage* storage);
@@ -30,6 +40,10 @@ void ctst_storage_free(ctst_storage* storage);
 /* Node allocation / deallocation */
 ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, ctst_node_ref next, ctst_node_ref left, ctst_node_ref right, char* bytes, size_t bytes_index, size_t bytes_length);
 void ctst_storage_node_free(ctst_storage* storage, ctst_node_ref node);
+
+/* Statistics about the storage */
+size_t ctst_storage_node_count(ctst_storage* storage);
+size_t ctst_storage_memory_usage(ctst_storage* storage);
 
 /* Node attribute reading */
 ctst_data ctst_storage_get_data(ctst_storage* storage, ctst_node_ref node);
@@ -42,16 +56,13 @@ char* ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node);
 void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes);
 
 /* Node attribute writing */
-ctst_node_ref ctst_storage_set_data(ctst_storage* storage, ctst_node_ref node, ctst_data data);
+void ctst_storage_set_data(ctst_storage* storage, ctst_balance_info* balance_info);
 ctst_node_ref ctst_storage_set_next(ctst_storage* storage, ctst_node_ref node, ctst_node_ref next);
 ctst_node_ref ctst_storage_set_left(ctst_storage* storage, ctst_node_ref node, ctst_node_ref left);
 ctst_node_ref ctst_storage_set_right(ctst_storage* storage, ctst_node_ref node, ctst_node_ref right);
 ctst_node_ref ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes, size_t bytes_index, size_t bytes_length);
 
 /* Special node operations */
-ctst_two_node_refs ctst_storage_swap_bytes(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
-void ctst_storage_swap_last_byte(ctst_storage* storage, ctst_node_ref node1, ctst_node_ref node2);
-
 ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t node_index);
 ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node);
 
