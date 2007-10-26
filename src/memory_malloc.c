@@ -160,7 +160,7 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
   node->left = 0;
   node->right = 0; 
   node->bytes_length = node_index+1;
-  realloc(node->bytes,node->bytes_length);
+  node->bytes = realloc(node->bytes,node->bytes_length);
   
   return result;
 }
@@ -177,7 +177,7 @@ ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node)
       
         /* We concatenate the bytes from the two nodes */
         char* bytes = node->bytes;
-        realloc(bytes,new_bytes_length);
+        bytes = realloc(bytes,new_bytes_length);
         memcpy(bytes+node->bytes_length,next->bytes,next->bytes_length);      
         
         /* We'll free the bytes from the next node with this node */
@@ -225,7 +225,7 @@ ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node)
         size_t new_bytes_length = node->bytes_length + branch->bytes_length - 1;
         char* bytes = node->bytes;
   
-        realloc(bytes,new_bytes_length);
+        bytes = realloc(bytes,new_bytes_length);
         memcpy(bytes+node->bytes_length-1,branch->bytes,branch->bytes_length);      
 
         /* We'll free the bytes from the branch node with this node */
