@@ -8,7 +8,6 @@
 */
 #include "include/ctst.h"
 #include "include/ctst_stack.h"
-#include <assert.h>
 
 struct struct_ctst_ctst {
   ctst_storage* storage;
@@ -480,36 +479,34 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
   stack = ctst_stack_alloc();
   node = ctst->root;
   while(node!=0) {
-    assert(ctst_stack_bytes_size(stack) == ctst_stack_node_size(stack));
-
     ctst_storage_load_bytes(ctst->storage, node, &bytes, &bytes_length);
-    ctst_stack_bytes_push(stack, bytes, 0, bytes_length-1);
-    ctst_stack_node_push(stack,0);
+    ctst_stack_push(stack, 0, bytes, 0, bytes_length-1);
 
     /* left */
     next_node = ctst_storage_get_left(ctst->storage, node);
     if(next_node!=0) {
-      ctst_stack_bytes_push(stack, bytes, 0, 0);
-      ctst_stack_node_push(stack, next_node);
+      ctst_stack_push(stack, next_node, bytes, 0, 0);
     }
 
     /* right */
     next_node = ctst_storage_get_right(ctst->storage, node);
     if(next_node!=0) {
-      ctst_stack_bytes_push(stack, bytes, 0, 0);
-      ctst_stack_node_push(stack, next_node);
+      ctst_stack_push(stack, next_node, bytes, 0, 0);
     }
 
     /* current */
-    ctst_stack_bytes_push(stack, bytes, bytes_length-1, 1);
-    ctst_stack_node_push(stack,0);
+    ctst_stack_push(stack, 0, bytes, bytes_length-1, 1);
     ctst_storage_unload_bytes(ctst->storage, node, bytes);
 
     data = ctst_storage_get_data(ctst->storage, node);
     if(data!=0) {
-      ctst_stack_bytes_peek(stack, &bytes, &bytes_index, &bytes_length);
+      /* We call ctst_stack_peek to get the entire key. We pass
+         a reference to next_node because it will be erased by the
+         0 we just pushed in. */
+      ctst_stack_peek(stack, &next_node, &bytes, &bytes_index, &bytes_length);
       data = visitor(context, bytes, bytes_index+bytes_length, data, 0);
       if(data != 0) {
+        /* If the visitor function returned some data, we stop the visit */
         ctst_stack_free(stack);
         return data;
       }
@@ -520,8 +517,7 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
       node = next_node;
     }
     else {
-      while(ctst_stack_node_pop(stack, &node)>0) {
-        ctst_stack_bytes_pop(stack, &bytes, &bytes_index, &bytes_length);
+      while(ctst_stack_pop(stack, &node, &bytes, &bytes_index, &bytes_length)>0) {
         if(node!=0) break;
       }
     }

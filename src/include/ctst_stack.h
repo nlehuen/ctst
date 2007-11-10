@@ -24,16 +24,10 @@ typedef struct struct_ctst_stack {
 ctst_stack* ctst_stack_alloc();
 void ctst_stack_free(ctst_stack* stack);
 
-/* Node functions */
-size_t ctst_stack_node_size(ctst_stack* stack);
-void ctst_stack_node_push(ctst_stack* stack,ctst_node_ref node);
-size_t ctst_stack_node_peek(ctst_stack* stack,ctst_node_ref* node);
-size_t ctst_stack_node_pop(ctst_stack* stack,ctst_node_ref* node);
-
 /* Bytes function */
-size_t ctst_stack_bytes_size(ctst_stack* stack);
-void ctst_stack_bytes_push(ctst_stack* stack,char* bytes, size_t bytes_index, size_t bytes_length);
-size_t ctst_stack_bytes_peek(ctst_stack* stack,char** bytes, size_t* bytes_index, size_t* bytes_length);
-size_t ctst_stack_bytes_pop(ctst_stack* stack,char** bytes, size_t* bytes_index, size_t* bytes_length);
+size_t ctst_stack_size(ctst_stack* stack);
+void ctst_stack_push(ctst_stack* stack, ctst_node_ref node, char* bytes, size_t bytes_index, size_t bytes_length);
+size_t ctst_stack_peek(ctst_stack* stack, ctst_node_ref* node, char** bytes, size_t* bytes_index, size_t* bytes_length);
+size_t ctst_stack_pop(ctst_stack* stack, ctst_node_ref* node, char** bytes, size_t* bytes_index, size_t* bytes_length);
 
 #endif
