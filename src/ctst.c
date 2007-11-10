@@ -534,6 +534,7 @@ ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* 
       node = next_node;
     }
     else {
+      /* We pop a new node, skipping the zeros */
       while(ctst_stack_pop(stack, &node, &bytes, &bytes_index, &bytes_length)>0) {
         if(node!=0) break;
       }

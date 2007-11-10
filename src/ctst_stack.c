@@ -111,6 +111,12 @@ size_t ctst_stack_peek(ctst_stack* stack, ctst_node_ref* node, char** bytes, siz
       *bytes_length = *(stack->bytes_length_top);
     }
   }
+  else {
+    *node = 0;
+    *bytes = 0;
+    *bytes_index = 0;
+    *bytes_length = 0;            
+  }
 
   return size;
 }
@@ -137,6 +143,12 @@ size_t ctst_stack_pop(ctst_stack* stack, ctst_node_ref* node, char** bytes, size
     }
 
     --(stack->bytes_length_top);
+  }
+  else {
+    *node = 0;
+    *bytes = 0;
+    *bytes_index = 0;
+    *bytes_length = 0;            
   }
 
   return size;
