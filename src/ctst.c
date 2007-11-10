@@ -512,8 +512,10 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
       }
     }
 
+    /* next */
     next_node = ctst_storage_get_next(ctst->storage, node);
     if(next_node!=0) {
+      /* No need to push anything since it would be popped immediatly */
       node = next_node;
     }
     else {
