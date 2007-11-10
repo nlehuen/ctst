@@ -1,3 +1,11 @@
+/*
+  ctst - (c) 2007 Nicolas Lehuen
+  This is released under the LGPL - see http://www.gnu.org/licenses/lgpl.html
+
+  $Id: $
+
+  This file implements a stack structure that is used by visitors and iterators.
+*/
 #include "include/ctst.h"
 #include "include/ctst_stack.h"
 #include <string.h>

@@ -6,7 +6,7 @@
 
   $Id: $
 
-  This file contains s stack structure that is used by visitors and iterators.
+  This file defines a stack structure that is used by visitors and iterators.
 */
 
 typedef struct struct_ctst_stack {
