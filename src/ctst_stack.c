@@ -55,17 +55,17 @@ void ctst_stack_node_push(ctst_stack* stack,ctst_node_ref node) {
   *(stack->node_top) = node;
 }
 
-ctst_node_ref ctst_stack_node_peek(ctst_stack* stack) {
-  return *(stack->node_top);
+size_t ctst_stack_node_peek(ctst_stack* stack,ctst_node_ref* node) {
+  *node = *(stack->node_top) ;
+  return stack->node_top - stack->node_bottom + 1;
 }
 
-ctst_node_ref ctst_stack_node_pop(ctst_stack* stack) {
-  if(stack->node_top >= stack->node_bottom) {
-    return *(stack->node_top--);
+size_t ctst_stack_node_pop(ctst_stack* stack,ctst_node_ref* node) {
+  size_t size = stack->node_top - stack->node_bottom + 1;
+  if(size>0) {
+    *node = *(stack->node_top--);
   }
-  else {
-    return 0;
-  }
+  return size;
 }
 
 /* Bytes function */

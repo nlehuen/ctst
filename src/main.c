@@ -14,7 +14,7 @@
 #include <string.h>
 
 void load_test(ctst_ctst* ctst) {
-  int i=0,l=0,c=10000;
+  int i=0,l=0,c=110;
   char dest[1024];
 
   printf("Load test pass 1...");
@@ -48,6 +48,12 @@ void load_test(ctst_ctst* ctst) {
   printf("OK\n");
 }
 
+ctst_data printer_visitor(void* context, char *key_bytes, size_t key_length, ctst_data data, size_t distance) {
+  printf("\"%*s\" : %d (length=%d,distance=%d)\n",key_length,key_bytes,data,key_length,distance);
+  return 0;
+}
+
+
 int main(int argc, char** argv) {
   ctst_storage* storage = ctst_storage_alloc();
   ctst_ctst* ctst = ctst_alloc(storage);
@@ -64,6 +70,10 @@ int main(int argc, char** argv) {
 
   data = ctst_set(ctst,"The answer to your question is",0,30,11);
   printf("%*s %d (was %d)\n",30,"The answer to your question is",ctst_get(ctst,"The answer to your question is",0,30),data);
+
+  printf("DUMP OF THE TREE\n");
+  ctst_visit_all(ctst, &printer_visitor, 0);
+  printf("END DUMP OF THE TREE\n");
 
   printf("Number of entries: %d\nTotal length of keys: %d\nTotal node count: %d\nMemory usage: %d\nRatio: %f\n",
     ctst_get_size(ctst),
@@ -87,6 +97,10 @@ int main(int argc, char** argv) {
 
   load_test(ctst);
 
+  printf("DUMP OF THE TREE\n");
+  ctst_visit_all(ctst, &printer_visitor, 0);
+  printf("END DUMP OF THE TREE\n");
+  
   printf("Number of entries: %d\nTotal length of keys: %d\nTotal node count: %d\nMemory usage: %d\nRatio: %f\n",
     ctst_get_size(ctst),
     ctst_get_total_key_length(ctst),
@@ -100,19 +114,20 @@ int main(int argc, char** argv) {
   
   {
     ctst_stack* stack = ctst_stack_alloc();
+    ctst_node_ref node;
 
     /* node function tests */
     ctst_stack_node_push(stack,(ctst_node_ref)1);
     ctst_stack_node_push(stack,(ctst_node_ref)2);
     ctst_stack_node_push(stack,(ctst_node_ref)3);
     assert(ctst_stack_node_size(stack)==3);
-    assert(ctst_stack_node_peek(stack)==(ctst_node_ref)3);
-    assert(ctst_stack_node_peek(stack)==(ctst_node_ref)3);
-    assert(ctst_stack_node_pop(stack)==(ctst_node_ref)3);
+    assert(ctst_stack_node_peek(stack,&node)==3 && node==(ctst_node_ref)3);
+    assert(ctst_stack_node_peek(stack,&node)==3 && node==(ctst_node_ref)3);
+    assert(ctst_stack_node_pop(stack,&node)==3 && node==(ctst_node_ref)3);
     assert(ctst_stack_node_size(stack)==2);
-    assert(ctst_stack_node_pop(stack)==(ctst_node_ref)2);
+    assert(ctst_stack_node_pop(stack,&node)==2 && node==(ctst_node_ref)2);
     assert(ctst_stack_node_size(stack)==1);
-    assert(ctst_stack_node_pop(stack)==(ctst_node_ref)1);
+    assert(ctst_stack_node_pop(stack,&node)==1 && node==(ctst_node_ref)1);
     assert(ctst_stack_node_size(stack)==0);
 
     ctst_stack_bytes_push(stack,"abc",0,3);
@@ -131,11 +146,32 @@ int main(int argc, char** argv) {
       assert(bytes_length==4);
       assert(strncmp(bytes,"abcefgh",7)==0);
 
+      ctst_stack_bytes_push(stack,"abc",2,0);
+      assert(ctst_stack_bytes_size(stack)==3);
+
+      assert(ctst_stack_bytes_peek(stack,&bytes,&bytes_index,&bytes_length)==3);
+      assert(ctst_stack_bytes_size(stack)==3);
+      assert(bytes_index==7);
+      assert(bytes_length==0);
+      assert(strncmp(bytes,"abcefgh",7)==0);
+
+      assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==3);
+      assert(ctst_stack_bytes_size(stack)==2);
+      assert(bytes_index==7);
+      assert(bytes_length==0);
+      assert(strncmp(bytes,"abcefgh",7)==0);
+
       assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==2);
       assert(ctst_stack_bytes_size(stack)==1);
       assert(bytes_index==3);
       assert(bytes_length==4);
       assert(strncmp(bytes,"abcefgh",7)==0);
+
+      assert(ctst_stack_bytes_peek(stack,&bytes,&bytes_index,&bytes_length)==1);
+      assert(ctst_stack_bytes_size(stack)==1);
+      assert(bytes_index==0);
+      assert(bytes_length==3);
+      assert(strncmp(bytes,"abc",3)==0);
 
       assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==1);
       assert(ctst_stack_bytes_size(stack)==0);
@@ -143,6 +179,7 @@ int main(int argc, char** argv) {
       assert(bytes_length==3);
       assert(strncmp(bytes,"abc",3)==0);
 
+      assert(ctst_stack_bytes_peek(stack,&bytes,&bytes_index,&bytes_length)==0);
       assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==0);
     }
 

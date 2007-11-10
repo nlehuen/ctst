@@ -8,7 +8,6 @@
 
   This file defines a stack structure that is used by visitors and iterators.
 */
-
 typedef struct struct_ctst_stack {
   ctst_node_ref* node_bottom;
   ctst_node_ref* node_top;
@@ -28,8 +27,8 @@ void ctst_stack_free(ctst_stack* stack);
 /* Node functions */
 size_t ctst_stack_node_size(ctst_stack* stack);
 void ctst_stack_node_push(ctst_stack* stack,ctst_node_ref node);
-ctst_node_ref ctst_stack_node_peek(ctst_stack* stack);
-ctst_node_ref ctst_stack_node_pop(ctst_stack* stack);
+size_t ctst_stack_node_peek(ctst_stack* stack,ctst_node_ref* node);
+size_t ctst_stack_node_pop(ctst_stack* stack,ctst_node_ref* node);
 
 /* Bytes function */
 size_t ctst_stack_bytes_size(ctst_stack* stack);

@@ -7,6 +7,8 @@
   This file contains the implementation of the ctst.
 */
 #include "include/ctst.h"
+#include "include/ctst_stack.h"
+#include <assert.h>
 
 struct struct_ctst_ctst {
   ctst_storage* storage;
@@ -464,4 +466,67 @@ void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* result) {
 
 void _ctst_balance_node(ctst_ctst* ctst,ctst_balance_info* balance_info) {
   /* TODO : implement this */
+}
+
+/* Visitor pattern */
+
+ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context) {
+  ctst_node_ref node, next_node;
+  ctst_stack* stack;
+  char* bytes;
+  size_t bytes_index, bytes_length;
+  ctst_data data;
+
+  stack = ctst_stack_alloc();
+  node = ctst->root;
+  while(node!=0) {
+    assert(ctst_stack_bytes_size(stack) == ctst_stack_node_size(stack));
+
+    ctst_storage_load_bytes(ctst->storage, node, &bytes, &bytes_length);
+    ctst_stack_bytes_push(stack, bytes, 0, bytes_length-1);
+    ctst_stack_node_push(stack,0);
+
+    /* left */
+    next_node = ctst_storage_get_left(ctst->storage, node);
+    if(next_node!=0) {
+      ctst_stack_bytes_push(stack, bytes, 0, 0);
+      ctst_stack_node_push(stack, next_node);
+    }
+
+    /* right */
+    next_node = ctst_storage_get_right(ctst->storage, node);
+    if(next_node!=0) {
+      ctst_stack_bytes_push(stack, bytes, 0, 0);
+      ctst_stack_node_push(stack, next_node);
+    }
+
+    /* current */
+    ctst_stack_bytes_push(stack, bytes, bytes_length-1, 1);
+    ctst_stack_node_push(stack,0);
+    ctst_storage_unload_bytes(ctst->storage, node, bytes);
+
+    data = ctst_storage_get_data(ctst->storage, node);
+    if(data!=0) {
+      ctst_stack_bytes_peek(stack, &bytes, &bytes_index, &bytes_length);
+      data = visitor(context, bytes, bytes_index+bytes_length, data, 0);
+      if(data != 0) {
+        ctst_stack_free(stack);
+        return data;
+      }
+    }
+
+    next_node = ctst_storage_get_next(ctst->storage, node);
+    if(next_node!=0) {
+      node = next_node;
+    }
+    else {
+      while(ctst_stack_node_pop(stack, &node)>0) {
+        ctst_stack_bytes_pop(stack, &bytes, &bytes_index, &bytes_length);
+        if(node!=0) break;
+      }
+    }
+  }
+
+  ctst_stack_free(stack);
+  return 0;
 }

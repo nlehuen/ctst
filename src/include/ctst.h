@@ -41,4 +41,8 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
 ctst_data ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data);
 ctst_data ctst_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length);
 
+/* Visitor pattern */
+typedef ctst_data(*ctst_visitor_function)(void* context, char *key_bytes, size_t key_length, ctst_data data, size_t distance);
+ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context);
+
 #endif
