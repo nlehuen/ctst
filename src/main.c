@@ -9,6 +9,9 @@
 #include <stdio.h>
 
 #include "include/ctst.h"
+#include "include/ctst_stack.h"
+#include <assert.h>
+#include <string.h>
 
 void load_test(ctst_ctst* ctst) {
   int i=0,l=0,c=10000;
@@ -94,6 +97,57 @@ int main(int argc, char** argv) {
 
   ctst_free(ctst);  
   ctst_storage_free(storage);
+  
+  {
+    ctst_stack* stack = ctst_stack_alloc();
+
+    /* node function tests */
+    ctst_stack_node_push(stack,(ctst_node_ref)1);
+    ctst_stack_node_push(stack,(ctst_node_ref)2);
+    ctst_stack_node_push(stack,(ctst_node_ref)3);
+    assert(ctst_stack_node_size(stack)==3);
+    assert(ctst_stack_node_peek(stack)==(ctst_node_ref)3);
+    assert(ctst_stack_node_peek(stack)==(ctst_node_ref)3);
+    assert(ctst_stack_node_pop(stack)==(ctst_node_ref)3);
+    assert(ctst_stack_node_size(stack)==2);
+    assert(ctst_stack_node_pop(stack)==(ctst_node_ref)2);
+    assert(ctst_stack_node_size(stack)==1);
+    assert(ctst_stack_node_pop(stack)==(ctst_node_ref)1);
+    assert(ctst_stack_node_size(stack)==0);
+
+    ctst_stack_bytes_push(stack,"abc",0,3);
+    assert(ctst_stack_bytes_size(stack)==1);
+    ctst_stack_bytes_push(stack,"efgh",0,4);
+    assert(ctst_stack_bytes_size(stack)==2);
+
+    {
+      char *bytes;
+      size_t bytes_index;
+      size_t bytes_length;
+
+      assert(ctst_stack_bytes_peek(stack,&bytes,&bytes_index,&bytes_length)==2);
+      assert(ctst_stack_bytes_size(stack)==2);
+      assert(bytes_index==3);
+      assert(bytes_length==4);
+      assert(strncmp(bytes,"abcefgh",7)==0);
+
+      assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==2);
+      assert(ctst_stack_bytes_size(stack)==1);
+      assert(bytes_index==3);
+      assert(bytes_length==4);
+      assert(strncmp(bytes,"abcefgh",7)==0);
+
+      assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==1);
+      assert(ctst_stack_bytes_size(stack)==0);
+      assert(bytes_index==0);
+      assert(bytes_length==3);
+      assert(strncmp(bytes,"abc",3)==0);
+
+      assert(ctst_stack_bytes_pop(stack,&bytes,&bytes_index,&bytes_length)==0);
+    }
+
+    ctst_stack_free(stack);
+  }
   
   return 0;
 }

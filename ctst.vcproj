@@ -178,6 +178,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\include\ctst_stack.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\include\malloc_storage.h"
 				>
 			</File>
@@ -199,6 +203,10 @@
 			>
 			<File
 				RelativePath=".\src\ctst.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ctst_stack.c"
 				>
 			</File>
 			<File
