@@ -1,6 +1,6 @@
 #include "include/ctst.h"
 
-#ifdef CTST_STORAGE_TYPE_MEMORY_MALLOC
+#ifdef CTST_STORAGE_TYPE_MALLOC_STORAGE
 /*
   ctst - (c) 2007 Nicolas Lehuen
   This is released under the LGPL - see http://www.gnu.org/licenses/lgpl.html

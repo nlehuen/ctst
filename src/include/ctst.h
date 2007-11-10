@@ -11,14 +11,14 @@
 
 #include <stdlib.h>
 
-#define CTST_STORAGE_TYPE_MEMORY_MALLOC
+#define CTST_STORAGE_TYPE_MALLOC_STORAGE
 
-#ifdef CTST_STORAGE_TYPE_MEMORY_MALLOC
-  #include "memory_malloc.h"
+#ifdef CTST_STORAGE_TYPE_MALLOC_STORAGE
+  #include "malloc_storage.h"
 #endif
 
-#ifdef CTST_STORAGE_TYPE_MEMORY_SMART
-  #include "memory_smart.h"
+#ifdef CTST_STORAGE_TYPE_COMPACT_STORAGE
+  #include "compact_storage.h"
 #endif
 
 #include "storage.h"
