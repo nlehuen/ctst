@@ -479,14 +479,9 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
   stack = ctst_stack_alloc();
   node = ctst->root;
   while(node!=0) {
+    /* current : push all the bytes of the node except the last one */
     ctst_storage_load_bytes(ctst->storage, node, &bytes, &bytes_length);
     ctst_stack_push(stack, 0, bytes, 0, bytes_length-1);
-
-    /* left */
-    next_node = ctst_storage_get_left(ctst->storage, node);
-    if(next_node!=0) {
-      ctst_stack_push(stack, next_node, bytes, 0, 0);
-    }
 
     /* right */
     next_node = ctst_storage_get_right(ctst->storage, node);
@@ -494,7 +489,13 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
       ctst_stack_push(stack, next_node, bytes, 0, 0);
     }
 
-    /* current */
+    /* left */
+    next_node = ctst_storage_get_left(ctst->storage, node);
+    if(next_node!=0) {
+      ctst_stack_push(stack, next_node, bytes, 0, 0);
+    }
+
+    /* current : push the last byte of the node */
     ctst_stack_push(stack, 0, bytes, bytes_length-1, 1);
     ctst_storage_unload_bytes(ctst->storage, node, bytes);
 
@@ -502,7 +503,7 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
     if(data!=0) {
       /* We call ctst_stack_peek to get the entire key. We pass
          a reference to next_node because it will be erased by the
-         0 we just pushed in. */
+         zero we just pushed in. */
       ctst_stack_peek(stack, &next_node, &bytes, &bytes_index, &bytes_length);
       data = visitor(context, bytes, bytes_index+bytes_length, data, 0);
       if(data != 0) {

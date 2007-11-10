@@ -71,6 +71,8 @@ int main(int argc, char** argv) {
   data = ctst_set(ctst,"The answer to your question is",0,30,11);
   printf("%*s %d (was %d)\n",30,"The answer to your question is",ctst_get(ctst,"The answer to your question is",0,30),data);
 
+  data = ctst_set(ctst,"There is something rotten in the kingdom of Denmark",0,51,1122);
+
   printf("DUMP OF THE TREE\n");
   ctst_visit_all(ctst, &printer_visitor, 0);
   printf("END DUMP OF THE TREE\n");
