@@ -77,6 +77,14 @@ int main(int argc, char** argv) {
   ctst_visit_all(ctst, &printer_visitor, 0);
   printf("END DUMP OF THE TREE\n");
 
+  printf("DUMP OF THE TREE, only The*\n");
+  ctst_visit_all_from_key(ctst, &printer_visitor, 0, "The", 0, 3);
+  printf("END DUMP OF THE TREE\n");
+
+  printf("DUMP OF THE TREE, only There*\n");
+  ctst_visit_all_from_key(ctst, &printer_visitor, 0, "--There", 2, 5);
+  printf("END DUMP OF THE TREE\n");
+
   printf("Number of entries: %d\nTotal length of keys: %d\nTotal node count: %d\nMemory usage: %d\nRatio: %f\n",
     ctst_get_size(ctst),
     ctst_get_total_key_length(ctst),

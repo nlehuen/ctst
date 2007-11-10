@@ -482,6 +482,91 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
   return result;
 }
 
+ctst_data ctst_visit_all_from_key(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, char* bytes, size_t bytes_index, size_t bytes_length) {
+  ctst_node_ref node = ctst->root;
+  ctst_node_ref best_node = 0;
+  size_t node_start_index;
+  size_t index = 0;
+  
+  while(node!=0) {
+    char* node_bytes;
+    size_t node_bytes_length;
+    size_t local_index=0;
+    int diff=0;
+
+    /* We load the bytes from the node into local memory */
+    ctst_storage_load_bytes(ctst->storage,node,&node_bytes,&node_bytes_length);
+
+    /* We store the index of the bytes until the beginning of this node */
+    node_start_index = index;
+
+    /* We keep advancing within the node while the bytes match */
+    while (local_index < node_bytes_length && index < bytes_length) {
+      diff = bytes[bytes_index + index] - node_bytes[local_index];
+      if (diff == 0) {
+          local_index++;
+          index++;
+      } else {
+          break;
+      }
+    } 
+
+    /* We unload the bytes from local memory */
+    ctst_storage_unload_bytes(ctst->storage,node,node_bytes);
+    
+    if (diff != 0) {
+      /* We got a mismatch. */
+
+      if (local_index < node_bytes_length - 1) {
+        /* We stopped before the last byte of the node.
+           A match is impossible, otherwise a split
+           would have occured during the insertion. */
+        return 0;
+      } else if (diff > 0) {
+        /* Mismatch on the last byte, we go to the left */
+        node = ctst_storage_get_left(ctst->storage,node);
+      } else {
+        /* Mismatch on the last byte, we go to the left */
+        node = ctst_storage_get_right(ctst->storage,node);
+      }
+    } else if (local_index == node_bytes_length) {
+      /* We matched all the bytes of the node */
+
+      if (index == bytes_length) {
+        /* We also matched all the bytes of the key, so
+           we've got our result ! */
+        break;
+      } else {
+        /* The key is not over yet, so we try to advance
+           within the tree. */
+        node = ctst_storage_get_next(ctst->storage,node);
+      }
+    } else {
+      /* We've got a match but the key ended before the node.
+         Therefore we don't have any result (otherwise we would have splitted
+         the node during the insertion.) */
+      break;
+    }
+  }
+  
+  if(node!=0) {
+    /* Now we've got a node for which the given bytes are a prefix. */
+    ctst_data result;
+    ctst_stack* stack;
+  
+    stack = ctst_stack_alloc();
+    ctst_stack_push(stack, node, bytes, bytes_index, node_start_index); 
+    result = _ctst_visit_all(ctst, visitor, context, stack);
+    ctst_stack_free(stack);
+  
+    return result;    
+  }
+  else {
+    return 0;
+  }
+}
+
+
 ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, ctst_stack* stack) {
   ctst_node_ref node, next_node;
   char* bytes;
