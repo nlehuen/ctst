@@ -22,6 +22,7 @@ void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, si
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
 void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* balance_info);
 void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
+ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, ctst_stack* stack);
 
 /* ctst allocation / deallocation */
 
@@ -470,14 +471,27 @@ void _ctst_balance_node(ctst_ctst* ctst,ctst_balance_info* balance_info) {
 /* Visitor pattern */
 
 ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context) {
-  ctst_node_ref node, next_node;
+  ctst_data result;
   ctst_stack* stack;
+
+  stack = ctst_stack_alloc();
+  ctst_stack_push(stack, ctst->root, 0, 0, 0); 
+  result = _ctst_visit_all(ctst, visitor, context, stack);
+  ctst_stack_free(stack);
+
+  return result;
+}
+
+ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, ctst_stack* stack) {
+  ctst_node_ref node, next_node;
   char* bytes;
   size_t bytes_index, bytes_length;
   ctst_data data;
-
-  stack = ctst_stack_alloc();
-  node = ctst->root;
+  
+  /* Extract the starting point from the stack and push back
+     the prefix bytes. */
+  ctst_stack_pop(stack, &node, &bytes, &bytes_index, &bytes_length);
+  ctst_stack_push(stack, 0, bytes, 0, bytes_index + bytes_length);
   while(node!=0) {
     /* current : push all the bytes of the node except the last one */
     ctst_storage_load_bytes(ctst->storage, node, &bytes, &bytes_length);
@@ -526,6 +540,5 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
     }
   }
 
-  ctst_stack_free(stack);
   return 0;
 }

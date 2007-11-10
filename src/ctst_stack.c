@@ -70,13 +70,14 @@ void ctst_stack_push(ctst_stack* stack, ctst_node_ref node, char* bytes, size_t 
   /* Determine the future size of the buffer and grow it
      if needed. */
   bytes_end = bytes_start + bytes_length;
+
   if(bytes_end + 1 > stack->bytes_length) { 
     stack->bytes_length = bytes_end + (stack->bytes_length>>1);
     stack->bytes = (char*)realloc(stack->bytes,stack->bytes_length);
   }
 
   /* Copy the bytes into the buffer */
-  memcpy(stack->bytes+bytes_start,bytes+bytes_index,bytes_length);
+  if(bytes_length>0) memcpy(stack->bytes+bytes_start,bytes+bytes_index,bytes_length);
 
   /* 1 extra byte for the terminating 0. It should not be needed
      as length are always given but this simplifies the use of printf. */
