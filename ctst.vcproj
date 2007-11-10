@@ -178,7 +178,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\include\memory_malloc.h"
+				RelativePath=".\src\include\malloc_storage.h"
 				>
 			</File>
 			<File
@@ -206,7 +206,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\memory_malloc.c"
+				RelativePath=".\src\malloc_storage.c"
 				>
 			</File>
 		</Filter>

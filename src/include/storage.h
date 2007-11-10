@@ -52,7 +52,7 @@ ctst_node_ref ctst_storage_get_left(ctst_storage* storage, ctst_node_ref node);
 ctst_node_ref ctst_storage_get_right(ctst_storage* storage, ctst_node_ref node);
 size_t ctst_storage_get_bytes_length(ctst_storage* storage, ctst_node_ref node);
 char ctst_storage_get_byte(ctst_storage* storage, ctst_node_ref node,size_t byte_index);
-char* ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node);
+void ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node, char** bytes, size_t* bytes_length);
 void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes);
 
 /* Node attribute writing */

@@ -105,8 +105,9 @@ char ctst_storage_get_byte(ctst_storage* storage, ctst_node_ref node,size_t byte
   return node->bytes[byte_index];
 }
 
-char* ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node) {
-  return node->bytes;
+void ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node, char** bytes, size_t* bytes_length) {
+  *bytes = node->bytes;
+  *bytes_length = node->bytes_length;  
 }
 
 void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes) {

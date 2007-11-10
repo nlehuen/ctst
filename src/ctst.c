@@ -66,13 +66,14 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
   size_t index = 0;
   
   while(node!=0) {
-    /* We load the bytes from the node into local memory */
-    char* node_bytes = ctst_storage_load_bytes(ctst->storage,node);
-    size_t node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,node);
-
+    char* node_bytes;
+    size_t node_bytes_length;
     size_t local_index=0;
     int diff=0;
-    
+
+    /* We load the bytes from the node into local memory */
+    ctst_storage_load_bytes(ctst->storage,node,&node_bytes,&node_bytes_length);
+
     /* We keep advancing within the node while the bytes match */
     while (local_index < node_bytes_length && index < bytes_length) {
       diff = bytes[bytes_index] - node_bytes[local_index];
@@ -148,12 +149,14 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
   }
   else {
     /* We load the bytes from the node into local memory */
-    char* node_bytes = ctst_storage_load_bytes(ctst->storage,balance_info->node);
-    size_t node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,balance_info->node);
-
+    char* node_bytes;
+    size_t node_bytes_length;
     size_t node_index = 0;
     int diff = 0;
-    
+
+    /* We load the bytes from the node into local memory */
+    ctst_storage_load_bytes(ctst->storage,balance_info->node,&node_bytes,&node_bytes_length);
+
     /* We keep advancing within the node while the bytes match */
     while (node_index < node_bytes_length && local_index < bytes_length) {
       diff = bytes[bytes_index+local_index] - node_bytes[node_index];
@@ -287,13 +290,14 @@ void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, si
     return;
   }
   else {
-    /* We load the bytes from the node into local memory */
-    char* node_bytes = ctst_storage_load_bytes(ctst->storage,balance_info->node);
-    size_t node_bytes_length = ctst_storage_get_bytes_length(ctst->storage,balance_info->node);
-
+    char* node_bytes;
+    size_t node_bytes_length;
     size_t node_index = 0;
     int diff = 0;
     
+    /* We load the bytes from the node into local memory */
+    ctst_storage_load_bytes(ctst->storage,balance_info->node,&node_bytes,&node_bytes_length);
+
     /* We keep advancing within the node while the bytes match */
     while (node_index < node_bytes_length && local_index < bytes_length) {
       diff = bytes[bytes_index+local_index] - node_bytes[node_index];
