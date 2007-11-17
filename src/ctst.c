@@ -602,7 +602,6 @@ ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* 
       data = visitor(context, bytes, bytes_index+bytes_length, data, 0);
       if(data != 0) {
         /* If the visitor function returned some data, we stop the visit */
-        ctst_stack_free(stack);
         return data;
       }
     }

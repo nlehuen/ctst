@@ -5,7 +5,7 @@
 /* Allocation / garbage collection functions */
 
 static ctst_data rtst_mark_visitor(void* context, char *key_bytes, size_t key_length, ctst_data data, size_t distance) {
-  rb_gc_mark(data);
+  rb_gc_mark((VALUE)data);
   return 0;
 }
 
@@ -93,7 +93,7 @@ static VALUE rtst_get(VALUE self, VALUE key) {
     ctst
   );
   
-  ctst_data result = ctst_get(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  VALUE result = (VALUE)ctst_get(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
   if(result==0) {
     return Qnil;
   }
@@ -111,7 +111,7 @@ static VALUE rtst_set(VALUE self, VALUE key, VALUE value) {
     ctst
   );
   
-  ctst_data result = ctst_set(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len, value);
+  VALUE result = (VALUE)ctst_set(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len, (ctst_data)value);
 
   if(result==0) {
     return Qnil;
@@ -123,14 +123,13 @@ static VALUE rtst_set(VALUE self, VALUE key, VALUE value) {
 
 static VALUE rtst_remove(VALUE self, VALUE key) {
   ctst_ctst *ctst;
-
   Data_Get_Struct(
     self,
     ctst_ctst,
     ctst
   );
   
-  ctst_data result = ctst_remove(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  VALUE result = (VALUE)ctst_remove(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
   
   if(result==0) {
     return Qnil;
@@ -139,6 +138,43 @@ static VALUE rtst_remove(VALUE self, VALUE key) {
     return result;
   }
 }
+
+/* Visitor pattern : we'll map this pattern to an iterator pattern, the caller
+   passing a block. */
+static ctst_data rtst_visitor(void* context, char *key_bytes, size_t key_length, ctst_data data, size_t distance) {
+  if(rb_block_given_p()) {
+    VALUE key = rb_str_new(key_bytes,key_length);
+    VALUE params = rb_ary_new3(3,key,(VALUE)data,INT2NUM(distance));
+    VALUE result = rb_yield(params);
+    if(result==Qnil) { 
+      return 0;
+    }
+    else {
+      return (ctst_data)result;
+    }
+  }
+  else {
+    rb_warn("No block given to RTST.each");
+    return Qfalse;
+  }
+}
+
+static VALUE rtst_each(VALUE self) {
+  ctst_ctst *ctst;
+  Data_Get_Struct(
+    self,
+    ctst_ctst,
+    ctst
+  );
+
+  VALUE result = (VALUE)ctst_visit_all(ctst, rtst_visitor, 0);
+  if(result == 0) {
+    return Qnil;
+  } else {
+    return result;
+  }
+}
+
 
 /*
  * The initialization method for this module
@@ -160,5 +196,8 @@ void Init_rtst() {
 	rb_define_method(RTST, "get", rtst_get, 1);
 	rb_define_method(RTST, "set", rtst_set, 2);
 	rb_define_method(RTST, "remove", rtst_remove, 1);
+	
+	/* Visitor pattern */
+	rb_define_method(RTST, "each", rtst_each, 0);
 }
 
