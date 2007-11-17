@@ -55,8 +55,7 @@ ctst_data printer_visitor(void* context, char *key_bytes, size_t key_length, cts
 
 
 int main(int argc, char** argv) {
-  ctst_storage* storage = ctst_storage_alloc();
-  ctst_ctst* ctst = ctst_alloc(storage);
+  ctst_ctst* ctst = ctst_alloc();
   ctst_data data;
 
   data = ctst_set(ctst,"The answer to your question is",0,30,42);
@@ -120,7 +119,6 @@ int main(int argc, char** argv) {
   );
 
   ctst_free(ctst);  
-  ctst_storage_free(storage);
   
   return 0;
 }

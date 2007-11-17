@@ -23,10 +23,17 @@
 
 #include "storage.h"
 
+struct struct_ctst_ctst {
+  ctst_storage* storage;
+  ctst_node_ref root;
+  size_t size;
+  size_t total_key_length;
+};
+
 typedef struct struct_ctst_ctst ctst_ctst;
 
 /* ctst allocation / deallocation */
-ctst_ctst* ctst_alloc(ctst_storage* storage);
+ctst_ctst* ctst_alloc();
 void ctst_free(ctst_ctst* ctst);
 
 /* A few statistics about the ctst */

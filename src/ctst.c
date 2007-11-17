@@ -9,13 +9,6 @@
 #include "include/ctst.h"
 #include "include/ctst_stack.h"
 
-struct struct_ctst_ctst {
-  ctst_storage* storage;
-  ctst_node_ref root;
-  size_t size;
-  size_t total_key_length;
-};
-
 /* Private functions of this module */
 void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
 void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
@@ -26,7 +19,8 @@ ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* 
 
 /* ctst allocation / deallocation */
 
-ctst_ctst* ctst_alloc(ctst_storage* storage) {
+ctst_ctst* ctst_alloc() {
+  ctst_storage* storage = ctst_storage_alloc();
   ctst_ctst* ctst = (ctst_ctst*)malloc(sizeof(ctst_ctst));
   ctst->storage = storage;
   ctst->root = 0;
@@ -36,6 +30,7 @@ ctst_ctst* ctst_alloc(ctst_storage* storage) {
 }
 
 void ctst_free(ctst_ctst* ctst) {
+  ctst_storage_free(ctst->storage);
   free(ctst);
 }
 
