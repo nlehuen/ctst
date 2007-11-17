@@ -43,7 +43,7 @@ size_t ctst_get_node_count(ctst_ctst* ctst);
 size_t ctst_get_memory_usage(ctst_ctst* ctst);
 float ctst_get_ratio(ctst_ctst* ctst);
 
-/* Basic accessors : get and set */
+/* Basic accessors : get, set and remove */
 ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length);
 ctst_data ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data);
 ctst_data ctst_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length);
