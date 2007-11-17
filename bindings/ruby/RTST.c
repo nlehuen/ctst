@@ -15,6 +15,24 @@ static VALUE rtst_new(VALUE self) {
   return obj;
 }
 
+static VALUE rtst_get(VALUE self, VALUE key) {
+  ctst_ctst *ctst;
+
+  Data_Get_Struct(
+    self,
+    ctst_ctst,
+    ctst
+  );
+  
+  ctst_data result = ctst_get(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  if(result==0) {
+    return Qnil;
+  }
+  else {
+    return result;
+  }
+}
+
 static VALUE rtst_set(VALUE self, VALUE key, VALUE value) {
   ctst_ctst *ctst;
 
@@ -34,7 +52,7 @@ static VALUE rtst_set(VALUE self, VALUE key, VALUE value) {
   }
 }
 
-static VALUE rtst_get(VALUE self, VALUE key) {
+static VALUE rtst_remove(VALUE self, VALUE key) {
   ctst_ctst *ctst;
 
   Data_Get_Struct(
@@ -43,7 +61,8 @@ static VALUE rtst_get(VALUE self, VALUE key) {
     ctst
   );
   
-  ctst_data result = ctst_get(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  ctst_data result = ctst_remove(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  
   if(result==0) {
     return Qnil;
   }
@@ -60,5 +79,6 @@ void Init_rtst() {
 	rb_define_singleton_method(RTST, "new", rtst_new, 0);
 	rb_define_method(RTST, "get", rtst_get, 1);
 	rb_define_method(RTST, "set", rtst_set, 2);
+	rb_define_method(RTST, "remove", rtst_remove, 1);
 }
 
