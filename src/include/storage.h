@@ -57,13 +57,13 @@ void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* 
 
 /* Node attribute writing */
 void ctst_storage_set_data(ctst_storage* storage, ctst_balance_info* balance_info);
-ctst_node_ref ctst_storage_set_next(ctst_storage* storage, ctst_node_ref node, ctst_node_ref next);
-ctst_node_ref ctst_storage_set_left(ctst_storage* storage, ctst_node_ref node, ctst_node_ref left);
-ctst_node_ref ctst_storage_set_right(ctst_storage* storage, ctst_node_ref node, ctst_node_ref right);
-ctst_node_ref ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes, size_t bytes_index, size_t bytes_length);
+void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, ctst_node_ref next);
+void ctst_storage_set_left(ctst_storage* storage, ctst_node_ref* node, ctst_node_ref left);
+void ctst_storage_set_right(ctst_storage* storage, ctst_node_ref* node, ctst_node_ref right);
+void ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref* node, char* bytes, size_t bytes_index, size_t bytes_length);
 
 /* Special node operations */
 ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t node_index);
 ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node);
-
+void ctst_storage_swap_bytes(ctst_storage* storage, ctst_node_ref* node1, ctst_node_ref* node2, int swap_last_byte);
 #endif

@@ -3,27 +3,33 @@ require 'rtst'
 v = []
 t = RTST.new
 
-10000.times do
+100000.times do
   r = rand.to_s
   v << r
   t.set(r,r)
 end
 
-removed = []
-2000.times do
+v.each do |r|
+  result = t.get(r)
+  fail "Problem with key : '#{r}'!='#{result}'" unless r == result
+end
+
+removed = {}
+20000.times do
   r = rand(v.size)
   to_remove = v.delete_at(r)
-  removed << to_remove
+  removed[to_remove] = true
   t.remove(to_remove)
 end
 
-v.each do |r|
-  fail unless t.get(r) == r
+removed.each do |r,dummy|
+  result = t.get(r)
+  fail "Not removed : '#{result}'" unless result == nil
 end
 
-removed.each do |r|
+v.each do |r|
   result = t.get(r)
-  fail "Not removed : #{result}" unless result == nil
+  fail "Problem with key : '#{r}'!='#{result}'" unless r == result
 end
 
 result = t.each do |key, value, distance|

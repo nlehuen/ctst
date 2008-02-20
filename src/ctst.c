@@ -178,7 +178,7 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
         ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
         balance_info->node = splitted.ref1;
         if(splitted.ref2 != joined) {
-          balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,joined); 
+          ctst_storage_set_next(ctst->storage,&(balance_info->node),joined); 
         }
       }
       
@@ -190,7 +190,7 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
 
         left_balance_info.data = balance_info->data;
         _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&left_balance_info,local_index);
-        balance_info->node = ctst_storage_set_left(ctst->storage, balance_info->node, left_balance_info.node);
+        ctst_storage_set_left(ctst->storage, &(balance_info->node), left_balance_info.node);
         balance_info->data = left_balance_info.data;
         balance_info->did_balance = left_balance_info.did_balance;
         
@@ -203,7 +203,7 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
 
         right_balance_info.data = balance_info->data;
         _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&right_balance_info,local_index);
-        balance_info->node = ctst_storage_set_right(ctst->storage, balance_info->node, right_balance_info.node);
+        ctst_storage_set_right(ctst->storage, &(balance_info->node), right_balance_info.node);
         balance_info->data=right_balance_info.data;
         balance_info->did_balance = right_balance_info.did_balance;
       }
@@ -246,7 +246,7 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
         _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&next_info,local_index);
         balance_info->data = next_info.data;
         if(previous_next!=next_info.node) {
-          balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,next_info.node); 
+          ctst_storage_set_next(ctst->storage,&(balance_info->node),next_info.node); 
         }
       }
 
@@ -261,7 +261,7 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
       ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
       balance_info->node = splitted.ref1;
       if(splitted.ref2 != joined) {
-        balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,joined); 
+        ctst_storage_set_next(ctst->storage,&(balance_info->node),joined); 
       }
 
       ctst_storage_set_data(ctst->storage,balance_info);
@@ -324,7 +324,7 @@ void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, si
 
         left_balance_info.data = balance_info->data;
         _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&left_balance_info,local_index);
-        balance_info->node = ctst_storage_set_left(ctst->storage, balance_info->node, left_balance_info.node);
+        ctst_storage_set_left(ctst->storage, &(balance_info->node), left_balance_info.node);
         balance_info->data = left_balance_info.data;
         balance_info->did_balance = left_balance_info.did_balance;
         
@@ -337,7 +337,7 @@ void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, si
 
         right_balance_info.data = balance_info->data;
         _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&right_balance_info,local_index);
-        balance_info->node = ctst_storage_set_right(ctst->storage, balance_info->node, right_balance_info.node);
+        ctst_storage_set_right(ctst->storage, &(balance_info->node), right_balance_info.node);
         balance_info->data=right_balance_info.data;
         balance_info->did_balance = right_balance_info.did_balance;
       }
@@ -385,7 +385,7 @@ void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, si
         _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&next_info,local_index);
         balance_info->data = next_info.data;
         if(previous_next!=next_info.node) {
-          balance_info->node = ctst_storage_set_next(ctst->storage,balance_info->node,next_info.node); 
+          ctst_storage_set_next(ctst->storage,&(balance_info->node),next_info.node); 
         }
       }
 
@@ -479,7 +479,6 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
 
 ctst_data ctst_visit_all_from_key(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, char* bytes, size_t bytes_index, size_t bytes_length) {
   ctst_node_ref node = ctst->root;
-  ctst_node_ref best_node = 0;
   size_t node_start_index;
   size_t index = 0;
   
