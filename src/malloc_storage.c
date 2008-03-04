@@ -22,12 +22,12 @@ struct struct_ctst_storage {
 };
 
 struct struct_ctst_node {
-  ctst_node_ref next;
-  ctst_node_ref left;
-  ctst_node_ref right;
   ctst_data     data;
   char*         bytes;
   size_t        bytes_length;
+  char* next_bytes;
+  ctst_node_ref* next_nodes;
+  size_t next_length;
 };
 
 /* Storage allocation / deallocation */
@@ -44,17 +44,24 @@ void ctst_storage_free(ctst_storage* storage) {
 
 /* Node allocation / deallocation */
 
-ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, ctst_node_ref next, ctst_node_ref left, ctst_node_ref right, char* bytes, size_t bytes_index, size_t bytes_length) {
+ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, char* bytes, size_t bytes_index, size_t bytes_length, char next_byte, ctst_node_ref next_node) {
   ctst_node_ref result=(ctst_node_ref)malloc(sizeof(ctst_node));
   
   result->data = data;
-  result->next = next;
-  result->left = left;
-  result->right = right;
   result->bytes_length = bytes_length;
-  result->bytes = (char*)malloc(bytes_length);
-  memcpy(result->bytes,bytes+bytes_index,bytes_length);
-
+  if(bytes_length>0) {
+    result->bytes = (char*)malloc(bytes_length);
+    memcpy(result->bytes,bytes+bytes_index,bytes_length);
+  }
+  if(next_node) {
+    result->next_length = 1;
+    result->next_bytes = (char*)malloc(sizeof(char));
+    *(result->next_bytes) = next_byte;
+    result->next_nodes = (ctst_node_ref*)malloc(sizeof(ctst_node_ref));
+    *(result->next_nodes) = next_node;
+  } else {
+    result->next_length = 0;
+  }
   storage->node_count++;  
 
   return result;
@@ -63,6 +70,14 @@ ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, cts
 void ctst_storage_node_free(ctst_storage* storage, ctst_node_ref node) {
   if(node->bytes_length>0) {
     free(node->bytes);
+  }
+  if(node->next_length>0) {
+    size_t i;
+    for(i=0;i<node->next_length;i++) {
+      ctst_storage_node_free(storage, node->next_nodes[i]);
+    }
+    free(node->next_bytes);
+    free(node->next_nodes);
   }
   free(node);
 
@@ -85,16 +100,31 @@ ctst_data ctst_storage_get_data(ctst_storage* storage, ctst_node_ref node) {
   return node->data;
 }
 
-ctst_node_ref ctst_storage_get_next(ctst_storage* storage, ctst_node_ref node) {
-  return node->next;
-}
-
-ctst_node_ref ctst_storage_get_left(ctst_storage* storage, ctst_node_ref node) {
-  return node->left;
-}
-
-ctst_node_ref ctst_storage_get_right(ctst_storage* storage, ctst_node_ref node) {
-  return node->right;
+ctst_node_ref ctst_storage_get_next(ctst_storage* storage, ctst_node_ref node, char next_byte) {
+  if(node->next_length==0) {
+    return 0;
+  } else {
+    size_t low = 0;
+    size_t high = node->next_length - 1;
+    size_t mid;
+    
+    while(low < high) {
+      mid = low + ((high - low) >> 1);
+      if(node->next_bytes[mid] < next_byte) {
+        low = mid + 1;  
+      }
+      else {
+        high = mid;
+      }
+    }
+    
+    if(low<node->next_length && node->next_bytes[low]==next_byte) {
+      return node->next_nodes[low];
+    }
+    else {
+      return 0;
+    }
+  }
 }
 
 size_t ctst_storage_get_bytes_length(ctst_storage* storage, ctst_node_ref node) {
@@ -121,16 +151,63 @@ void ctst_storage_set_data(ctst_storage* storage, ctst_balance_info* balance_inf
   balance_info->data = old_data;
 }
 
-void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, ctst_node_ref next) {
-  (*node)->next = next;
-}
+void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next_byte, ctst_node_ref next_node) {
+  ctst_node_ref node2 = *node;
+  if(node2->next_length==0) {
+    if(next_node!=0) {
+      node2->next_bytes = (char*)malloc(sizeof(char));
+      *(node2->next_bytes) = next_byte;
+      node2->next_nodes = (ctst_node_ref*)malloc(sizeof(ctst_node_ref));
+      *(node2->next_nodes) = next_node;
+      node2->next_length = 1;
+    }
+  } else {
+    size_t low = 0;
+    size_t high = node2->next_length;
+    size_t mid;
+    
+    while(low < high) {
+      mid = low + ((high - low) >> 1);
+      if(node2->next_bytes[mid] < next_byte) {
+        low = mid + 1;  
+      }
+      else {
+        high = mid;
+      }
+    }
+    
+    if(low<node2->next_length && node2->next_bytes[low]==next_byte) {
+      ctst_node_ref old_node = node2->next_nodes[low];
+      if(old_node!=next_node) {
+        ctst_storage_node_free(storage,old_node); 
+        if(next_node!=0) {
+          node2->next_nodes[low] = next_node;
+        } else {
+          memcpy(node2->next_bytes+low,node2->next_bytes+low+1,sizeof(char)*(node2->next_length-low-1));
+          memcpy(node2->next_nodes+low,node2->next_nodes+low+1,sizeof(ctst_node_ref)*(node2->next_length-low-1));
+          node2->next_length--;
+        }
+      }
+    }
+    else {
+      if(next_node!=0) {
+        if(low<node2->next_length) {
+          node2->next_length++;
+          node2->next_bytes=(char*)realloc(node2->next_bytes,node2->next_length);
+          memcpy(node2->next_bytes+low+1,node2->next_bytes+low,sizeof(char)*(node2->next_length-low-1));
+          node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
+          memcpy(node2->next_nodes+low+1,node2->next_nodes+low,sizeof(ctst_node_ref)*(node2->next_length-low-1));
+        } else {
+          node2->next_length++;
+          node2->next_bytes=(char*)realloc(node2->next_bytes,node2->next_length);
+          node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
+        }
 
-void ctst_storage_set_left(ctst_storage* storage, ctst_node_ref* node, ctst_node_ref left) {
-  (*node)->left = left;
-}
-
-void ctst_storage_set_right(ctst_storage* storage, ctst_node_ref* node, ctst_node_ref right) {
-  (*node)->right = right;
+        node2->next_bytes[low] = next_byte;
+        node2->next_nodes[low] = next_node;
+      }
+    }
+  }
 }
 
 void ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref* node, char* bytes, size_t bytes_index, size_t bytes_length) {
@@ -154,116 +231,25 @@ void ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref* node, char* by
 
 /* Special node operations */
 
-ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t node_index) {
+ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t split_index) {
   ctst_two_node_refs result;
+  char* old_bytes = node->bytes;
   
-  result.ref1 = node;
-  result.ref2 = ctst_storage_node_alloc(storage, node->data, node->next, node->left, node->right, node->bytes, node_index+1, node->bytes_length-node_index-1);
+  result.ref1 = ctst_storage_node_alloc(storage, 0, old_bytes, 0, split_index, node->bytes[split_index],node);
+  result.ref2 = node;
   
-  node->data = 0;
-  node->next = result.ref2;
-  node->left = 0;
-  node->right = 0; 
-  node->bytes_length = node_index+1;
-  node->bytes = realloc(node->bytes,node->bytes_length);
-  
+  node->bytes_length = node->bytes_length - split_index - 1;
+  node->bytes = (char*)malloc(node->bytes_length);
+  memcpy(node->bytes,old_bytes+split_index+1,node->bytes_length);
+
+  free(old_bytes);
+
   return result;
 }
 
 ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node) {
-  if(node!=0 && node->data==0) {
-    ctst_node_ref next = node->next;
-    if(next!=0) {
-      size_t new_bytes_length = node->bytes_length + next->bytes_length;
-      if(node->left==0 && node->right==0 && new_bytes_length <= ctst_max_bytes_per_node) {
-        /* At this point, we've got a node that should be merged with its
-           next node. Normally, this can only be caused by the removal of
-           a key from the tree. */
-      
-        /* We concatenate the bytes from the two nodes */
-        char* bytes = node->bytes;
-        bytes = realloc(bytes,new_bytes_length);
-        memcpy(bytes+node->bytes_length,next->bytes,next->bytes_length);      
-        
-        /* We'll free the bytes from the next node with this node */
-        node->bytes = next->bytes;
-        ctst_storage_node_free(storage,node);
- 
-        /* The remaining node will be the next node */
-        next->bytes = bytes;
-        next->bytes_length = new_bytes_length;
-        
-        return next;
-      }
-    }
-    else {
-      /* We don't have a next node ; as we don't have data in the node,
-         we may be in a one-way branch, in which case we can perform a merge. */
-      ctst_node_ref branch = 0;
-      ctst_node_ref left = node->left;
-      ctst_node_ref right = node->right;
-
-      /* Let's find out if we are in a one-way branch */      
-      if(left==0) {
-        if(right==0) {
-          /* This node is totally useless, we free it. */
-          ctst_storage_node_free(storage,node);
-          return 0;
-        }
-        else {
-          branch = right;
-        }
-      }
-      else {
-        if(right==0) {
-          branch = left;
-        }
-        else {
-          /* Nope, no one-way branch, this node must stay */
-        }
-      }
-      
-      if(branch!=0) {
-        /* We'll rebuild the bytes in the branch node with all the bytes
-           from the current node except the last one, which was the reason
-           for the branch. */
-        size_t new_bytes_length = node->bytes_length + branch->bytes_length - 1;
-        char* bytes = node->bytes;
-  
-        bytes = realloc(bytes,new_bytes_length);
-        memcpy(bytes+node->bytes_length-1,branch->bytes,branch->bytes_length);      
-
-        /* We'll free the bytes from the branch node with this node */
-        node->bytes = branch->bytes;
-        ctst_storage_node_free(storage,node);
-        
-        /* The remaining node will be the branch node */
-        branch->bytes = bytes;
-        branch->bytes_length = new_bytes_length;
-        
-        return branch;
-      }
-    }
-  }
+  /* TODO */
   return node;
-}
-
-void ctst_storage_swap_bytes(ctst_storage* storage, ctst_node_ref* node1, ctst_node_ref* node2, int swap_last_byte) {
-  ctst_node_ref n1 = *node1;
-  ctst_node_ref n2 = *node2;
-  
-  char* tmp_bytes = n1->bytes;
-  size_t tmp_bytes_length = n1->bytes_length;
-  n1->bytes = n2->bytes;
-  n1->bytes_length = n2->bytes_length;
-  n2->bytes = tmp_bytes;
-  n2->bytes_length = tmp_bytes_length;
-  
-  if(swap_last_byte) {
-    char tmp = *(n1->bytes + n1->bytes_length - 1);
-    *(n1->bytes + n1->bytes_length - 1) = *(n2->bytes + n2->bytes_length - 1);
-    *(n2->bytes + n2->bytes_length - 1) = tmp;  
-  }
 }
 
 #endif

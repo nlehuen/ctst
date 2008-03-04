@@ -9,41 +9,51 @@
 #include <stdio.h>
 
 #include "include/ctst.h"
-#include "include/ctst_stack.h"
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 void load_test(ctst_ctst* ctst) {
-  int i=0,l=0,c=110;
+  int i=0,r,l=0,c=100000;
   char dest[1024];
 
-  printf("Load test pass 1...");
+  printf("Load test pass 0...");
   for(i=0;i<c;i++) {
-    l = sprintf(dest,"%d",i);
-    if(ctst_set(ctst,dest,0,l,i)!=0) {
-      printf("Erreur 1 !");
-      exit(1);
-    }
+    l = sprintf(dest,"%d",i%317);
+    assert(ctst_get(ctst,dest,0,l)==0);
   }
   printf("OK\n");
 
+  printf("Load test pass 1...");
+  for(i=0;i<c;i++) {
+    l = sprintf(dest,"%d",i%317);
+    ctst_set(ctst,dest,0,l,i%317);
+    assert(ctst_get(ctst,dest,0,l)==i%317);
+  }
+  printf(" OK\n");
+
   printf("Load test pass 2...");
   for(i=0;i<c;i++) {
-    l = sprintf(dest,"%d",i);
-    if(ctst_set(ctst,dest,0,l,i*2)!=i) {
-      printf("KO !\n");
-      exit(1);
-    }
+    l = sprintf(dest,"%d",i%317);
+    assert(ctst_get(ctst,dest,0,l)==i%317);
   }
   printf("OK\n");
 
   printf("Load test pass 3...");
+  srand(1);
   for(i=0;i<c;i++) {
-    l = sprintf(dest,"%d",i);
-    if(ctst_set(ctst,dest,0,l,i)!=i*2) {
-      printf("KO !\n");
-      exit(1);
-    }
+    r = rand();
+    l = sprintf(dest,"%d",r%1000);
+    ctst_set(ctst,dest,0,l,r%1000);
+    assert(ctst_get(ctst,dest,0,l)==r%1000);
+  }
+  printf("OK\n");
+
+  printf("Load test pass 4...");
+  for(i=0;i<c;i++) {
+    r = rand();
+    l = sprintf(dest,"%d",r%1000);
+    assert(ctst_get(ctst,dest,0,l)==r%1000);
   }
   printf("OK\n");
 }
