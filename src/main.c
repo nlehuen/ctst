@@ -14,7 +14,8 @@
 #include <stdlib.h>
 
 void load_test(ctst_ctst* ctst) {
-  int i=0,r,l=0,c=10000;
+  int i=0,l=0,c=10000;
+  double f;
   char dest[1024];
 
   printf("Load test pass 0...");
@@ -42,21 +43,19 @@ void load_test(ctst_ctst* ctst) {
   printf("Load test pass 3...");
   srand(1);
   for(i=0;i<c;i++) {
-    r = rand()%10000;
-    l = sprintf(dest,"%d",r);
-    ctst_set(ctst,dest,0,l,r);
-    if(ctst_get(ctst,dest,0,l)!=r) {
-      assert(ctst_get(ctst,dest,0,l)==r);
-    }
+    f = 10000.0/(rand()%10000+1);
+    l = sprintf(dest,"%f",f);
+    ctst_set(ctst,dest,0,l,i+1);
+    assert(ctst_get(ctst,dest,0,l)==i+1);
   }
   printf("OK\n");
 
   printf("Load test pass 4...");
   srand(1);
   for(i=0;i<c;i++) {
-    r = rand()%10000;
-    l = sprintf(dest,"%d",r);
-    assert(ctst_get(ctst,dest,0,l)==r);
+    f = 10000.0/(rand()%10000+1);
+    l = sprintf(dest,"%f",f);
+    assert(ctst_get(ctst,dest,0,l)!=0);
   }
   printf("OK\n");
 
@@ -68,31 +67,31 @@ void load_test(ctst_ctst* ctst) {
   }
   printf("OK\n");
 
-  printf("Load test pass 5...");
+  printf("Load test pass 6...");
   srand(1);
   for(i=0;i<c;i++) {
-    r = rand()%10000;
-    l = sprintf(dest,"%d",r);
-    if(r%2==0) {
+    f = 10000.0/(rand()%10000+1);
+    l = sprintf(dest,"%f",f);
+    if(f<5000.0) {
       l = ctst_remove(ctst,dest,0,l);
-      assert(l==r || l==0);
+      assert(ctst_get(ctst,dest,0,l)==0);
     }
     else {
-      assert(ctst_get(ctst,dest,0,l)==r);
+      assert(ctst_get(ctst,dest,0,l)!=0);
     }
   }
   printf("OK\n");
 
-  printf("Load test pass 6...");
+  printf("Load test pass 7...");
   srand(1);
   for(i=0;i<c;i++) {
-    r = rand()%10000;
-    l = sprintf(dest,"%d",r);
-    if(r%2==0) {
+    f = 10000.0/(rand()%10000+1);
+    l = sprintf(dest,"%f",f);
+    if(f<5000.0) {
       assert(ctst_get(ctst,dest,0,l)==0);
     }
     else {
-      assert(ctst_get(ctst,dest,0,l)==r);
+      assert(ctst_get(ctst,dest,0,l)!=0);
     }
   }
   printf("OK\n");

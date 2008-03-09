@@ -188,14 +188,14 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
       }
       else {
         /* We haven't finished the key, so we go to the next node */
-        ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,balance_info->node,last_byte); 
+        ctst_node_ref previous_next = ctst_storage_get_next(ctst->storage,balance_info->node,bytes[bytes_index+local_index]); 
         ctst_balance_info next_info;
         next_info.node = previous_next;
         next_info.data = balance_info->data;
         _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&next_info,local_index+1);
         balance_info->data = next_info.data;
         if(previous_next!=next_info.node) {
-          ctst_storage_set_next(ctst->storage,&(balance_info->node),last_byte,next_info.node); 
+          ctst_storage_set_next(ctst->storage,&(balance_info->node),bytes[bytes_index+local_index],next_info.node); 
         }
      }
     }
