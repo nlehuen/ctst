@@ -165,29 +165,24 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
     if(diff!=0) {
       ctst_balance_info next_balance_info;
 
-      if(node_index<node_bytes_length-1) {
-        /* Since there is a mismatch before the last byte of the node, we
-           need to split the node */
-        ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,balance_info->node,node_index);
-        
-        /* Maybe the next node can be joined, following the split */
-        ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
-        if(splitted.ref2 != joined) {
-          ctst_storage_set_next(ctst->storage,&(splitted.ref1),last_byte,joined); 
-        }
-
-        balance_info->node = splitted.ref1;
-      }
+      /* we need to split the node */
+      ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,balance_info->node,node_index);
       
-      if(diff!=0) {
-        next_balance_info.node = ctst_storage_get_next(ctst->storage, balance_info->node, last_byte); 
-        next_balance_info.data = balance_info->data;
-
-        _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&next_balance_info,local_index+1);
-
-        ctst_storage_set_next(ctst->storage, &(balance_info->node), last_byte, next_balance_info.node);        
-        balance_info->data = next_balance_info.data;
+      /* Maybe the next node can be joined, following the split */
+      ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
+      if(splitted.ref2 != joined) {
+        ctst_storage_set_next(ctst->storage,&(splitted.ref1),last_byte,joined); 
       }
+
+      balance_info->node = splitted.ref1;
+
+      next_balance_info.node = ctst_storage_get_next(ctst->storage, balance_info->node, last_byte); 
+      next_balance_info.data = balance_info->data;
+
+      _ctst_recursive_set(ctst,bytes,bytes_index,bytes_length,&next_balance_info,local_index+1);
+
+      ctst_storage_set_next(ctst->storage, &(balance_info->node), last_byte, next_balance_info.node);        
+      balance_info->data = next_balance_info.data;
     }
     else if (node_index == node_bytes_length) {
       /* We reached the end of the bytes of the node, without differences */
@@ -208,12 +203,12 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
         if(previous_next!=next_info.node) {
           ctst_storage_set_next(ctst->storage,&(balance_info->node),last_byte,next_info.node); 
         }
-      }
+     }
     }
     else {
       /* We reached the end of the key, but not the end of the bytes
        for this node. Therefore, we need to split this node. */
-      ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,balance_info->node,local_index-1);
+      ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,balance_info->node,node_index);
 
       /* Maybe the next node can be joined, following the split */
       ctst_node_ref joined = ctst_storage_join_nodes(ctst->storage,splitted.ref2);
@@ -271,7 +266,7 @@ void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, si
       
       left_balance_info.node = ctst_storage_get_next(ctst->storage, balance_info->node, bytes[bytes_index+local_index]);
       left_balance_info.data = balance_info->data;
-      _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&left_balance_info,local_index);
+      _ctst_recursive_remove(ctst,bytes,bytes_index,bytes_length,&left_balance_info,local_index+1);
       ctst_storage_set_next(ctst->storage, &(balance_info->node), bytes[bytes_index+local_index], left_balance_info.node);
       balance_info->data = left_balance_info.data;
 

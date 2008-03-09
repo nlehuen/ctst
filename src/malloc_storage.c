@@ -105,7 +105,7 @@ ctst_node_ref ctst_storage_get_next(ctst_storage* storage, ctst_node_ref node, c
     return 0;
   } else {
     size_t low = 0;
-    size_t high = node->next_length - 1;
+    size_t high = node->next_length;
     size_t mid;
     
     while(low < high) {
@@ -179,7 +179,6 @@ void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next
     if(low<node2->next_length && node2->next_bytes[low]==next_byte) {
       ctst_node_ref old_node = node2->next_nodes[low];
       if(old_node!=next_node) {
-        ctst_storage_node_free(storage,old_node); 
         if(next_node!=0) {
           node2->next_nodes[low] = next_node;
         } else {
@@ -193,13 +192,13 @@ void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next
       if(next_node!=0) {
         if(low<node2->next_length) {
           node2->next_length++;
-          node2->next_bytes=(char*)realloc(node2->next_bytes,node2->next_length);
+          node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*node2->next_length);
           memcpy(node2->next_bytes+low+1,node2->next_bytes+low,sizeof(char)*(node2->next_length-low-1));
           node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
           memcpy(node2->next_nodes+low+1,node2->next_nodes+low,sizeof(ctst_node_ref)*(node2->next_length-low-1));
         } else {
           node2->next_length++;
-          node2->next_bytes=(char*)realloc(node2->next_bytes,node2->next_length);
+          node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*node2->next_length);
           node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
         }
 
@@ -238,9 +237,11 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
   result.ref1 = ctst_storage_node_alloc(storage, 0, old_bytes, 0, split_index, node->bytes[split_index],node);
   result.ref2 = node;
   
-  node->bytes_length = node->bytes_length - split_index - 1;
-  node->bytes = (char*)malloc(node->bytes_length);
-  memcpy(node->bytes,old_bytes+split_index+1,node->bytes_length);
+  node->bytes_length = node->bytes_length - 1 - split_index;
+  if(node->bytes_length>0) {
+    node->bytes = (char*)malloc(node->bytes_length);
+    memcpy(node->bytes,old_bytes+split_index+1,node->bytes_length);
+  }
 
   free(old_bytes);
 
