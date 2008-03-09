@@ -50,8 +50,8 @@ ctst_node_ref ctst_storage_node_alloc(ctst_storage* storage, ctst_data data, cha
   result->data = data;
   result->bytes_length = bytes_length;
   if(bytes_length>0) {
-    result->bytes = (char*)malloc(bytes_length);
-    memcpy(result->bytes,bytes+bytes_index,bytes_length);
+    result->bytes = (char*)malloc(sizeof(char)*bytes_length);
+    memcpy(result->bytes,bytes+bytes_index,sizeof(char)*bytes_length);
   }
   if(next_node) {
     result->next_length = 1;
@@ -213,16 +213,16 @@ void ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref* node, char* by
   ctst_node_ref node2 = *node;
   if(node2->bytes_length>0) {
     if(bytes_length>0) {
-      node2->bytes = (char*)realloc(node2->bytes,bytes_length);
-      memcpy(node2->bytes,bytes+bytes_index,bytes_length);
+      node2->bytes = (char*)realloc(node2->bytes,sizeof(char)*bytes_length);
+      memcpy(node2->bytes,bytes+bytes_index,sizeof(char)*bytes_length);
     }
     else {
       free(node2->bytes);
     }
   } else {
     if(bytes_length>0) {
-      node2->bytes = (char*)malloc(bytes_length);
-      memcpy(node2->bytes,bytes+bytes_index,bytes_length);
+      node2->bytes = (char*)malloc(sizeof(char)*bytes_length);
+      memcpy(node2->bytes,bytes+bytes_index,sizeof(char)*bytes_length);
     }
   }
   node2->bytes_length = bytes_length;
@@ -239,8 +239,8 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
   
   node->bytes_length = node->bytes_length - 1 - split_index;
   if(node->bytes_length>0) {
-    node->bytes = (char*)malloc(node->bytes_length);
-    memcpy(node->bytes,old_bytes+split_index+1,node->bytes_length);
+    node->bytes = (char*)malloc(sizeof(char)*node->bytes_length);
+    memcpy(node->bytes,old_bytes+split_index+1,sizeof(char)*node->bytes_length);
   }
 
   free(old_bytes);
