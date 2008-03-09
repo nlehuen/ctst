@@ -14,6 +14,7 @@
   will be measured.
 */
 #include <string.h>
+#include <assert.h>
 
 const size_t ctst_max_bytes_per_node = 1024; 
 
@@ -251,6 +252,42 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
 ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node) {
   /* TODO */
   return node;
+}
+
+ctst_data ctst_storage_visit_all(ctst_storage* storage, ctst_visitor_function visitor, void* context, ctst_node_ref node, char** bytes, size_t bytes_length, size_t* bytes_limit) {
+  size_t i;
+  ctst_data result;
+
+  if(node->data) {
+    (*bytes)[bytes_length] = 0;
+    result = visitor(context, *bytes, bytes_length, node->data, 0);
+    if(result) {
+      return result;
+    }
+  }
+
+  for(i=0;i<node->next_length;i++) {
+    char next_byte = node->next_bytes[i];
+    ctst_node_ref next_node = node->next_nodes[i];
+
+    if(bytes_length + next_node->bytes_length + 2 >= *bytes_limit) {
+      *bytes_limit = (bytes_length + next_node->bytes_length)*3/2 + 2;
+      *bytes = (char*)realloc(*bytes,sizeof(char)*(*bytes_limit));
+    }
+
+    (*bytes)[bytes_length] = next_byte;
+    if(next_node->bytes_length>0) {
+      assert(bytes_length + 1 + next_node->bytes_length < *bytes_limit);
+      memcpy(*bytes+bytes_length+1,next_node->bytes,next_node->bytes_length);
+    }
+
+    result = ctst_storage_visit_all(storage, visitor, context, next_node, bytes, bytes_length + 1 + next_node->bytes_length, bytes_limit);
+    if(result) {
+      return result;
+    }
+  }
+  
+  return 0;
 }
 
 #endif

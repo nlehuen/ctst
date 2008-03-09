@@ -8,13 +8,14 @@
 */
 #include "include/ctst.h"
 
+#include <string.h>
+
 /* Private functions of this module */
 void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
 void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
 void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* balance_info);
 void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
-ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, ctst_node_ref node);
 
 /* ctst allocation / deallocation */
 
@@ -86,17 +87,10 @@ ctst_data ctst_get(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
     ctst_storage_unload_bytes(ctst->storage,node,node_bytes);
     
     if (diff != 0) {
-      /* We got a mismatch. */
-
-      if (local_index < node_bytes_length - 1) {
-        /* We stopped before the last byte of the node.
-           A match is impossible, otherwise a split
-           would have occured during the insertion. */
-          return 0;
-      } else {
-        /* Mismatch on the last byte, we go to the next node */
-        node = ctst_storage_get_next(ctst->storage,node,bytes[bytes_index]);
-      }
+      /* We got a mismatch. We stopped before the last byte of the node.
+         A match is impossible, otherwise a split
+         would have occured during the insertion. */
+      return 0;
     } else if (local_index == node_bytes_length) {
       /* We matched all the bytes of the node */
 
@@ -324,14 +318,93 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
 /* Visitor pattern */
 
 ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context) {
-  return 0;
+  ctst_data result = 0;
+
+  if(ctst->root) {
+    size_t bytes_limit=16;
+    char* bytes = (char*)malloc(sizeof(char)*bytes_limit);
+
+    result = ctst_storage_visit_all(ctst->storage, visitor, context, ctst->root, &bytes, 0, &bytes_limit);
+
+    free(bytes);
+  }
+
+  return result;
 }
 
 ctst_data ctst_visit_all_from_key(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, char* bytes, size_t bytes_index, size_t bytes_length) {
-  return 0;
-}
+  ctst_node_ref node = ctst->root;
+  size_t index = 0;
+  
+  while(node!=0) {
+    char* node_bytes;
+    size_t node_bytes_length;
+    size_t local_index=0;
+    int diff=0;
 
+    /* We load the bytes from the node into local memory */
+    ctst_storage_load_bytes(ctst->storage,node,&node_bytes,&node_bytes_length);
 
-ctst_data _ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, ctst_node_ref node) {
+    /* We keep advancing within the node while the bytes match */
+    while (local_index < node_bytes_length && index < bytes_length) {
+      diff = bytes[bytes_index+index] - node_bytes[local_index];
+      if (diff == 0) {
+          local_index++;
+          index++;
+      } else {
+          break;
+      }
+    } 
+
+    /* We unload the bytes from local memory */
+    ctst_storage_unload_bytes(ctst->storage,node,node_bytes);
+    
+    if (diff != 0) {
+      /* We got a mismatch. We stopped before the last byte of the node.
+         A match is impossible, otherwise a split
+         would have occured during the insertion. */
+        return 0;
+    } else if (local_index == node_bytes_length) {
+      /* We matched all the bytes of the node */
+
+      if (index == bytes_length) {
+        /* We also matched all the bytes of the key, so
+           we've got our result ! */
+        ctst_data result;
+
+        size_t bytes_limit = bytes_length*3/2;
+        char* bytes_buffer = (char*)malloc(sizeof(char)*bytes_limit);
+        memcpy(bytes_buffer,bytes+bytes_index,bytes_length);
+
+        result = ctst_storage_visit_all(ctst->storage, visitor, context, node, &bytes_buffer, bytes_length, &bytes_limit);
+
+        free(bytes_buffer);
+
+        return result;
+      } else {
+        /* The key is not over yet, so we try to advance
+           within the tree. */
+        node = ctst_storage_get_next(ctst->storage,node,bytes[bytes_index+index]);
+        local_index=0;
+        index++;
+      }
+    } else {
+      /* We've got a match but the key ended before the node. */
+      ctst_data result;
+
+      size_t bytes_limit = (bytes_length + node_bytes_length - local_index)*3/2 + 1;
+      char* bytes_buffer = (char*)(char*)malloc(sizeof(char)*bytes_limit);
+      memcpy(bytes_buffer,bytes+bytes_index,bytes_length);
+      memcpy(bytes_buffer+bytes_length,node_bytes+local_index,node_bytes_length-local_index); 
+
+      result = ctst_storage_visit_all(ctst->storage, visitor, context, node, &bytes_buffer, bytes_length + node_bytes_length - local_index, &bytes_limit);
+
+      free(bytes_buffer);
+
+      return result;
+    }
+  }
+  
+  /* We reached an empty branch, therefore we don't have any result */
   return 0;
 }

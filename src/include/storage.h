@@ -56,4 +56,9 @@ void ctst_storage_set_bytes(ctst_storage* storage, ctst_node_ref* node, char* by
 /* Special node operations */
 ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref node, size_t split_index);
 ctst_node_ref ctst_storage_join_nodes(ctst_storage* storage, ctst_node_ref node);
+
+/* Visitor support */
+typedef ctst_data(*ctst_visitor_function)(void* context, char *key_bytes, size_t key_length, ctst_data data, size_t distance);
+ctst_data ctst_storage_visit_all(ctst_storage* ctst, ctst_visitor_function visitor, void* context, ctst_node_ref node, char** bytes, size_t bytes_length, size_t *bytes_limit);
+
 #endif

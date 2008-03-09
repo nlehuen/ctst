@@ -61,6 +61,14 @@ void load_test(ctst_ctst* ctst) {
   printf("OK\n");
 
   printf("Load test pass 5...");
+  for(i=0;i<c;i++) {
+    l = sprintf(dest,"%d",i);
+    ctst_set(ctst,dest,0,l,i);
+    assert(ctst_get(ctst,dest,0,l)==i);
+  }
+  printf("OK\n");
+
+  printf("Load test pass 5...");
   srand(1);
   for(i=0;i<c;i++) {
     r = rand()%10000;
@@ -118,6 +126,10 @@ int main(int argc, char** argv) {
   ctst_visit_all(ctst, &printer_visitor, 0);
   printf("END DUMP OF THE TREE\n");
 
+  printf("DUMP OF THE TREE, only H*\n");
+  ctst_visit_all_from_key(ctst, &printer_visitor, 0, "**Hello", 2, 1);
+  printf("END DUMP OF THE TREE\n");
+
   printf("DUMP OF THE TREE, only The*\n");
   ctst_visit_all_from_key(ctst, &printer_visitor, 0, "The", 0, 3);
   printf("END DUMP OF THE TREE\n");
@@ -146,6 +158,12 @@ int main(int argc, char** argv) {
     ctst_get_ratio(ctst)
   );
 
+  printf("DUMP OF THE TREE\n");
+  ctst_visit_all(ctst, &printer_visitor, 0);
+  printf("END DUMP OF THE TREE\n");
+
+  printf("LOAD TEST\n");
+  
   load_test(ctst);
 
   printf("DUMP OF THE TREE\n");
