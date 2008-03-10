@@ -72,12 +72,9 @@ void load_test(ctst_ctst* ctst) {
   for(i=0;i<c;i++) {
     f = 10000.0/(rand()%10000+1);
     l = sprintf(dest,"%f",f);
-    if(f<5000.0) {
+    if(i%2==0) {
       l = ctst_remove(ctst,dest,0,l);
       assert(ctst_get(ctst,dest,0,l)==0);
-    }
-    else {
-      assert(ctst_get(ctst,dest,0,l)!=0);
     }
   }
   printf("OK\n");
@@ -87,11 +84,8 @@ void load_test(ctst_ctst* ctst) {
   for(i=0;i<c;i++) {
     f = 10000.0/(rand()%10000+1);
     l = sprintf(dest,"%f",f);
-    if(f<5000.0) {
+    if(i%2==0) {
       assert(ctst_get(ctst,dest,0,l)==0);
-    }
-    else {
-      assert(ctst_get(ctst,dest,0,l)!=0);
     }
   }
   printf("OK\n");

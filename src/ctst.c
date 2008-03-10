@@ -321,10 +321,21 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
   ctst_data result = 0;
 
   if(ctst->root) {
-    size_t bytes_limit=16;
-    char* bytes = (char*)malloc(sizeof(char)*bytes_limit);
+    size_t bytes_limit,node_bytes_length;
+    char* bytes;
+    char* node_bytes;
 
-    result = ctst_storage_visit_all(ctst->storage, visitor, context, ctst->root, &bytes, 0, &bytes_limit);
+    /* We load the bytes from the node into local memory */
+    ctst_storage_load_bytes(ctst->storage,ctst->root,&node_bytes,&node_bytes_length);
+
+    bytes_limit = node_bytes_length*3/2 + 16;
+    bytes = (char*)malloc(sizeof(char)*bytes_limit);
+    memcpy(bytes,node_bytes,node_bytes_length);
+
+    /* We unload the bytes from local memory */
+    ctst_storage_unload_bytes(ctst->storage,ctst->root,node_bytes);
+
+    result = ctst_storage_visit_all(ctst->storage, visitor, context, ctst->root, &bytes, node_bytes_length, &bytes_limit);
 
     free(bytes);
   }
