@@ -23,12 +23,12 @@ struct struct_ctst_storage {
 };
 
 struct struct_ctst_node {
-  ctst_data     data;
-  char*         bytes;
-  size_t        bytes_length;
-  char* next_bytes;
+  ctst_data      data;
+  char*          bytes;
+  size_t         bytes_length;
+  char*          next_bytes;
   ctst_node_ref* next_nodes;
-  size_t next_length;
+  size_t         next_length;
 };
 
 /* Storage allocation / deallocation */
@@ -109,6 +109,7 @@ ctst_node_ref ctst_storage_get_next(ctst_storage* storage, ctst_node_ref node, c
     size_t high = node->next_length;
     size_t mid;
     
+    // dichotomy search
     while(low < high) {
       mid = low + ((high - low) >> 1);
       if(node->next_bytes[mid] < next_byte) {
@@ -167,6 +168,7 @@ void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next
     size_t high = node2->next_length;
     size_t mid;
     
+    // dichotomy search
     while(low < high) {
       mid = low + ((high - low) >> 1);
       if(node2->next_bytes[mid] < next_byte) {
@@ -178,31 +180,47 @@ void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next
     }
     
     if(low<node2->next_length && node2->next_bytes[low]==next_byte) {
+      // We found next_byte in the next_bytes array
+      // Let's look at the old node   
       ctst_node_ref old_node = node2->next_nodes[low];
+
       if(old_node!=next_node) {
+        // We need to do something
+        
         if(next_node!=0) {
+          // Set the new node value
           node2->next_nodes[low] = next_node;
         } else {
+          // Deletion of the link
           memcpy(node2->next_bytes+low,node2->next_bytes+low+1,sizeof(char)*(node2->next_length-low-1));
           memcpy(node2->next_nodes+low,node2->next_nodes+low+1,sizeof(ctst_node_ref)*(node2->next_length-low-1));
           node2->next_length--;
         }
+
+        // Free the old node
+        if(old_node != 0) {
+          ctst_storage_node_free(storage, old_node);
+        }
       }
     }
     else {
+      // We haven't found next_byte in the array so we need to insert it
       if(next_node!=0) {
-        if(low<node2->next_length) {
-          node2->next_length++;
-          node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*node2->next_length);
+        // We need to insert a new link
+        // The low index is the insertion point
+        
+        // We resize the link data arrays
+        node2->next_length++;
+        node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*node2->next_length);
+        node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
+        
+        if(low<node2->next_length-1) {
+          // If the insertion point is not at the end, we move all link data above the insertion point
           memcpy(node2->next_bytes+low+1,node2->next_bytes+low,sizeof(char)*(node2->next_length-low-1));
-          node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
           memcpy(node2->next_nodes+low+1,node2->next_nodes+low,sizeof(ctst_node_ref)*(node2->next_length-low-1));
-        } else {
-          node2->next_length++;
-          node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*node2->next_length);
-          node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
         }
 
+        // We store the link data
         node2->next_bytes[low] = next_byte;
         node2->next_nodes[low] = next_node;
       }

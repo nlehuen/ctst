@@ -302,7 +302,7 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
 
     local_size = ctst_max_bytes_per_node;
     next = _ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size);
- 
+    // TODO : big bug here ! next is not used...
     return ctst_storage_node_alloc(ctst->storage,0,bytes,bytes_index+local_index,local_size,0,0);    
   }
   else {
