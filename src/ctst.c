@@ -6,7 +6,7 @@
 
   This file contains the implementation of the ctst.
 */
-#include "include/ctst.h"
+#include "ctst.h"
 
 #include <string.h>
 

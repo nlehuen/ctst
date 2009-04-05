@@ -1,4 +1,4 @@
-#include "include/ctst.h"
+#include "ctst.h"
 
 #ifdef CTST_STORAGE_TYPE_MALLOC_STORAGE
 /*

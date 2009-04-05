@@ -5,7 +5,7 @@
 /* Allocation / garbage collection functions */
 
 static ctst_data rtst_mark_visitor(void* context, char *key_bytes, size_t key_length, ctst_data data, size_t distance) {
-  rb_gc_mark((VALUE)data);
+  rb_gc_mark_maybe(data);
   return 0;
 }
 
@@ -93,7 +93,7 @@ static VALUE rtst_get(VALUE self, VALUE key) {
     ctst
   );
   
-  VALUE result = (VALUE)ctst_get(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  VALUE result = (VALUE)ctst_get(ctst, RSTRING_PTR(key), 0, RSTRING_LEN(key));
   if(result==0) {
     return Qnil;
   }
@@ -111,7 +111,7 @@ static VALUE rtst_set(VALUE self, VALUE key, VALUE value) {
     ctst
   );
   
-  VALUE result = (VALUE)ctst_set(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len, (ctst_data)value);
+  VALUE result = (VALUE)ctst_set(ctst, RSTRING_PTR(key), 0, RSTRING_LEN(key), (ctst_data)value);
 
   if(result==0) {
     return Qnil;
@@ -129,7 +129,7 @@ static VALUE rtst_remove(VALUE self, VALUE key) {
     ctst
   );
   
-  VALUE result = (VALUE)ctst_remove(ctst, RSTRING(key)->ptr, 0, RSTRING(key)->len);
+  VALUE result = (VALUE)ctst_remove(ctst, RSTRING_PTR(key), 0, RSTRING_LEN(key));
   
   if(result==0) {
     return Qnil;
