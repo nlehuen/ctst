@@ -13,6 +13,11 @@
 
 #define CTST_STORAGE_TYPE_MALLOC_STORAGE
 
+// This is where you define the kind of data which is stored
+// in the tree
+#include "ruby.h"
+typedef VALUE ctst_data;
+
 #ifdef CTST_STORAGE_TYPE_MALLOC_STORAGE
   #include "malloc_storage.h"
 #endif

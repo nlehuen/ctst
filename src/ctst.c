@@ -14,8 +14,6 @@
 void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
 void _ctst_recursive_remove(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
 ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_data data, size_t local_index);
-void _ctst_compute_balance(ctst_ctst* ctst, ctst_balance_info* balance_info);
-void _ctst_balance_node(ctst_ctst* ctst, ctst_balance_info* balance_info);
 
 /* ctst allocation / deallocation */
 
@@ -133,7 +131,6 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
     balance_info->data=0;
   }
   else {
-    /* We load the bytes from the node into local memory */
     char* node_bytes;
     char last_byte;
     size_t node_bytes_length;

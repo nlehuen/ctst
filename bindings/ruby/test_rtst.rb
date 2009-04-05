@@ -17,6 +17,7 @@ count
   r = rand.to_s
   v << r
   t.set(r,r)
+  fail "Not stored : #{r}" if t.get(r) != r
 end
 
 count
