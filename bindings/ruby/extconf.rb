@@ -5,7 +5,7 @@ require 'mkmf'
 extension_name = 'rtst'
 
 # The destination
-dir_config(extension_name)
+dir_config(extension_name,idefault="../../src")
 
 # Do the work
 create_makefile(extension_name)

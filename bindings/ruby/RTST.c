@@ -1,5 +1,5 @@
 #include "ruby.h"
-#include "include/ctst.h"
+#include "ctst.h"
 #include <stdlib.h>
 
 /* Allocation / garbage collection functions */
