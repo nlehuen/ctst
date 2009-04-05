@@ -8,7 +8,7 @@ OBJS:=$(OUT)/obj
 GEN_RUN:=no
 
 # flags for different builds 
-BASE_FLAGS:=-Wall
+BASE_FLAGS:=-Wall -Isrc/include
 BASE_LFLAGS:=
 DEBUG_FLAGS:=-g
 DEBUG_LFLAGS:=
