@@ -58,6 +58,6 @@ ctst_data ctst_visit_all(ctst_ctst* ctst, ctst_visitor_function visitor, void* c
 ctst_data ctst_visit_all_from_key(ctst_ctst* ctst, ctst_visitor_function visitor, void* context, char* bytes, size_t bytes_index, size_t bytes_length);
 
 /* Debug functions */
-void ctst_debug_dump(ctst_ctst* ctst, char* filename);
+void ctst_debug_dump(ctst_ctst* ctst, char* filename, ctst_node_ref from);
 
 #endif

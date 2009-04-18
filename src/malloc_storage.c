@@ -253,7 +253,7 @@ ctst_two_node_refs ctst_storage_split_node(ctst_storage* storage, ctst_node_ref 
   ctst_two_node_refs result;
   char* old_bytes = node->bytes;
   
-  result.ref1 = ctst_storage_node_alloc(storage, 0, old_bytes, 0, split_index, node->bytes[split_index],node);
+  result.ref1 = ctst_storage_node_alloc(storage, 0, old_bytes, 0, split_index, node->bytes[split_index], node);
   result.ref2 = node;
   
   node->bytes_length = node->bytes_length - 1 - split_index;

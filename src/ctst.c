@@ -125,6 +125,8 @@ ctst_data ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
   return result.data;
 }
 
+static int split_counter = 0;
+
 void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length, ctst_balance_info* balance_info, size_t local_index) {
   if(balance_info->node==0) {
     balance_info->node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,balance_info->data,local_index);
@@ -156,6 +158,11 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
     if(diff!=0) {
       ctst_balance_info next_balance_info;
 
+      char buffer[1024];
+      
+      sprintf(buffer,"split.%06i.1.%lx.dot",++split_counter,(unsigned long)balance_info->node);
+      ctst_debug_dump(ctst, buffer, balance_info->node);
+
       /* we need to split the node */
       ctst_two_node_refs splitted = ctst_storage_split_node(ctst->storage,balance_info->node,node_index);
       
@@ -164,6 +171,9 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
       if(splitted.ref2 != joined) {
         ctst_storage_set_next(ctst->storage,&(splitted.ref1),last_byte,joined); 
       }
+      
+      sprintf(buffer,"split.%06i.2.%lx.dot",split_counter,(unsigned long)balance_info->node);
+      ctst_debug_dump(ctst, buffer, splitted.ref1);
 
       balance_info->node = splitted.ref1;
 
@@ -176,6 +186,9 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
 
       ctst_storage_set_next(ctst->storage, &(balance_info->node), last_byte, next_balance_info.node);        
       balance_info->data = next_balance_info.data;
+
+      sprintf(buffer,"split.%06i.3.%lx.dot",split_counter,(unsigned long)balance_info->node);
+      ctst_debug_dump(ctst, buffer, balance_info->node);
     }
     else if (node_index == node_bytes_length) {
       /* We reached the end of the bytes of the node, without differences */
@@ -420,8 +433,8 @@ ctst_data ctst_visit_all_from_key(ctst_ctst* ctst, ctst_visitor_function visitor
 }
 
 /* Debug functions */
-void ctst_debug_dump(ctst_ctst* ctst, char* filename) {
+void ctst_debug_dump(ctst_ctst* ctst, char* filename, ctst_node_ref from) {
 	FILE* output = fopen(filename,"wb");
-	ctst_storage_debug_node(ctst->storage, ctst->root, output, 1);
+	ctst_storage_debug_node(ctst->storage, from ? from : ctst->root, output, 1);
 	fclose(output);
 }

@@ -183,7 +183,7 @@ static VALUE rtst_debug_dump(VALUE self, VALUE filename) {
     ctst
   );
 
-  ctst_debug_dump(ctst, STR2CSTR(filename));
+  ctst_debug_dump(ctst, STR2CSTR(filename),  0);
 
   return Qnil;
 }
