@@ -167,6 +167,8 @@ void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_
 
       balance_info->node = splitted.ref1;
 
+      // TODO : the bug is there
+
       next_balance_info.node = ctst_storage_get_next(ctst->storage, balance_info->node, last_byte); 
       next_balance_info.data = balance_info->data;
 
@@ -415,4 +417,11 @@ ctst_data ctst_visit_all_from_key(ctst_ctst* ctst, ctst_visitor_function visitor
   
   /* We reached an empty branch, therefore we don't have any result */
   return 0;
+}
+
+/* Debug functions */
+void ctst_debug_dump(ctst_ctst* ctst, char* filename) {
+	FILE* output = fopen(filename,"wb");
+	ctst_storage_debug_node(ctst->storage, ctst->root, output, 1);
+	fclose(output);
 }

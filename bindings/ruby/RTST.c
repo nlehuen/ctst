@@ -110,7 +110,7 @@ static VALUE rtst_set(VALUE self, VALUE key, VALUE value) {
     ctst_ctst,
     ctst
   );
-  
+
   VALUE result = (VALUE)ctst_set(ctst, RSTRING_PTR(key), 0, RSTRING_LEN(key), (ctst_data)value);
 
   if(result==0) {
@@ -175,6 +175,18 @@ static VALUE rtst_each(VALUE self) {
   }
 }
 
+static VALUE rtst_debug_dump(VALUE self, VALUE filename) {
+  ctst_ctst *ctst;
+  Data_Get_Struct(
+    self,
+    ctst_ctst,
+    ctst
+  );
+
+  ctst_debug_dump(ctst, STR2CSTR(filename));
+
+  return Qnil;
+}
 
 /*
  * The initialization method for this module
@@ -192,12 +204,15 @@ void Init_rtst() {
 	rb_define_method(RTST, "memory_usage", rtst_memory_usage, 0);
 	rb_define_method(RTST, "ratio", rtst_ratio, 0);
 
-  /* Basic accessors : get, set and remove */
+    /* Basic accessors : get, set and remove */
 	rb_define_method(RTST, "get", rtst_get, 1);
 	rb_define_method(RTST, "set", rtst_set, 2);
 	rb_define_method(RTST, "remove", rtst_remove, 1);
-	
-	/* Visitor pattern */
+
+ 	/* Visitor pattern */
 	rb_define_method(RTST, "each", rtst_each, 0);
+
+ 	/* Debug functions */
+	rb_define_method(RTST, "dump", rtst_debug_dump, 1);
 }
 

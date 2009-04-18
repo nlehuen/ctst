@@ -1,34 +1,36 @@
 require 'rtst'
 
-$counter = 0
-def count()
-   puts "COUNT: #{$counter}"
-   $counter += 1
-end
-
-count
+srand(43776)
 
 v = []
 t = RTST.new
 
-count
-
+count = 0
 100000.times do
+  count = count + 1
+  
   r = rand.to_s
+
+  puts r
+
   v << r
   t.set(r,r)
+  
+  t.dump "tree.#{count}.dot"
+  
   fail "Not stored : #{r}" if t.get(r) != r
-end
 
-count
+  v.each do |r|
+    result = t.get(r)
+    fail "Problem with key : '#{r}'!='#{result}'" unless r == result
+  end
+end
 
 v.each do |r|
   result = t.get(r)
   puts "Cool !" if r == result
   fail "Problem with key : '#{r}'!='#{result}'" unless r == result
 end
-
-count
 
 removed = {}
 20000.times do
@@ -38,32 +40,22 @@ removed = {}
   t.remove(to_remove)
 end
 
-count
-
 removed.each do |r,dummy|
   result = t.get(r)
   fail "Not removed : '#{result}'" unless result == nil
 end
-
-count
 
 v.each do |r|
   result = t.get(r)
   fail "Problem with key : '#{r}'!='#{result}'" unless r == result
 end
 
-count
-
 result = t.each do |key, value, distance|
   fail unless key == value
   fail unless distance == 0
 end
 
-count
-
 fail result.inspect unless result == nil
-
-count
 
 puts "ALL GOOD !"
 puts "Number of keys : #{t.size}"

@@ -308,4 +308,28 @@ ctst_data ctst_storage_visit_all(ctst_storage* storage, ctst_visitor_function vi
   return 0;
 }
 
+void ctst_storage_debug_node(ctst_storage* storage, ctst_node_ref node, FILE* output, int start) {
+	if(start) {
+		fprintf(output,"digraph tst {\n");
+	}
+
+	fprintf(output, "N%lx [shape=record, label=\"{ N%lx | data=%lx | (%i) \\\"%*s\\\" | { ", (unsigned long)node, (unsigned long)node, (unsigned long)node->data, (int)node->bytes_length, (int)node->bytes_length, node->bytes);
+	
+	int i,l;
+	for(i=0,l=node->next_length;i<l;i++) {
+		if(i>0) fprintf(output, " | ");
+		fprintf(output, "<P%i> %c",i,node->next_bytes[i]);
+	}
+	
+	fprintf(output, "} }\"];\n");
+	
+	for(i=0,l=node->next_length;i<l;i++) {
+		ctst_storage_debug_node(storage, node->next_nodes[i], output, 0);		
+		fprintf(output, "N%lx:P%i -> N%lx;\n",(unsigned long)node,i,(unsigned long)node->next_nodes[i]);
+	}
+	
+	if(start) {
+		fprintf(output,"}\n");
+	}
+}
 #endif
