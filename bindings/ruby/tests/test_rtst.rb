@@ -1,5 +1,6 @@
 require 'rtst'
 require 'set'
+require 'fileutils'
 require 'test/unit'
 
 class RTSTTests < Test::Unit::TestCase
@@ -65,4 +66,17 @@ class RTSTTests < Test::Unit::TestCase
 		
 		assert_equal @removed.size, @items.size
 	end
+
+	def test_dump_and_graphviz
+		@items.first(16).each do |item|
+			@tree.set item, item
+	    end
+	    
+	    FileUtils.rm(["test_rtst_dump.dot","test_rtst_dump.dot.png"], :force => true)
+	    @tree.dump("test_rtst_dump.dot")
+	    assert File.exists?("test_rtst_dump.dot")
+	    system("dot -Kdot -Tpng -O test_rtst_dump.dot")
+	    FileUtils.rm(["test_rtst_dump.dot"])
+	    assert File.exists?("test_rtst_dump.dot.png")
+	end	
 end
