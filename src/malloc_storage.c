@@ -192,14 +192,16 @@ void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next
           node2->next_nodes[low] = next_node;
         } else {
           // Deletion of the link
-          memcpy(node2->next_bytes+low,node2->next_bytes+low+1,sizeof(char)*(node2->next_length-low-1));
-          memcpy(node2->next_nodes+low,node2->next_nodes+low+1,sizeof(ctst_node_ref)*(node2->next_length-low-1));
+          memmove(node2->next_bytes+low,node2->next_bytes+low+1,sizeof(char)*(node2->next_length-low-1));
+          memmove(node2->next_nodes+low,node2->next_nodes+low+1,sizeof(ctst_node_ref)*(node2->next_length-low-1));
           node2->next_length--;
-        }
-
-        // Free the old node
-        if(old_node != 0) {
-          ctst_storage_node_free(storage, old_node);
+        
+          // Free the old node
+          // TODO : shouldn't we return the old node and
+          // let the calling code free it ?
+          if(old_node != 0) {
+            ctst_storage_node_free(storage, old_node);
+          }
         }
       }
     }
@@ -210,14 +212,15 @@ void ctst_storage_set_next(ctst_storage* storage, ctst_node_ref* node, char next
         // The low index is the insertion point
         
         // We resize the link data arrays
-        node2->next_length++;
-        node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*node2->next_length);
-        node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*node2->next_length);
+        size_t length = node2->next_length;
+        node2->next_length = length+1;
+        node2->next_bytes=(char*)realloc(node2->next_bytes,sizeof(char)*(length+1));
+        node2->next_nodes=(ctst_node_ref*)realloc(node2->next_nodes,sizeof(ctst_node_ref)*(length+1));
         
-        if(low<node2->next_length-1) {
+        if(low<length) {
           // If the insertion point is not at the end, we move all link data above the insertion point
-          memcpy(node2->next_bytes+low+1,node2->next_bytes+low,sizeof(char)*(node2->next_length-low-1));
-          memcpy(node2->next_nodes+low+1,node2->next_nodes+low,sizeof(ctst_node_ref)*(node2->next_length-low-1));
+          memmove(node2->next_bytes+low+1,node2->next_bytes+low,sizeof(char)*(length-low));
+          memmove(node2->next_nodes+low+1,node2->next_nodes+low,sizeof(ctst_node_ref)*(length-low));
         }
 
         // We store the link data
@@ -313,7 +316,12 @@ void ctst_storage_debug_node(ctst_storage* storage, ctst_node_ref node, FILE* ou
 		fprintf(output,"digraph tst {\n");
 	}
 
-	fprintf(output, "N%lx [shape=record, label=\"{ N%lx | data=%lx | (%i) \\\"%*s\\\" | { ", (unsigned long)node, (unsigned long)node, (unsigned long)node->data, (int)node->bytes_length, (int)node->bytes_length, node->bytes);
+	// Build a NULL terminated string
+    char cstr[1024];
+    memcpy(cstr, node->bytes, sizeof(char)*node->bytes_length);
+    cstr[node->bytes_length] = '\0';
+
+	fprintf(output, "N%lx [shape=record, label=\"{ %lx | data=%lx | \\\"%s\\\" | { ", (unsigned long)node, (unsigned long)node, (unsigned long)node->data, cstr);
 	
 	int i,l;
 	for(i=0,l=node->next_length;i<l;i++) {

@@ -6,12 +6,10 @@ v = []
 t = RTST.new
 
 count = 0
-100000.times do
+1000.times do
   count = count + 1
   
   r = rand.to_s
-
-  puts r
 
   v << r
   t.set(r,r)
@@ -28,12 +26,11 @@ end
 
 v.each do |r|
   result = t.get(r)
-  puts "Cool !" if r == result
   fail "Problem with key : '#{r}'!='#{result}'" unless r == result
 end
 
 removed = {}
-20000.times do
+200.times do
   r = rand(v.size)
   to_remove = v.delete_at(r)
   removed[to_remove] = true
