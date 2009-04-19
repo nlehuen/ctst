@@ -14,7 +14,7 @@ count = 0
   v << r
   t.set(r,r)
   
-  t.dump "tree.#{count}.dot"
+  # t.dump "tree.#{count}.dot"
   
   fail "Not stored : #{r}" if t.get(r) != r
 
