@@ -60,8 +60,9 @@ class RTSTTests < Test::Unit::TestCase
 			assert @items.include? key
 			assert !@removed.include?(key)
     		@items.delete key
+    		nil # Need to return nil to go through all the tree
 		end
 		
-		assert_equal 0, @items.size
+		assert_equal @removed.size, @items.size
 	end
 end
