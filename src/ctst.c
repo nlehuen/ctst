@@ -125,8 +125,6 @@ ctst_data ctst_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t byte
   return result.data;
 }
 
-static int split_counter = 0;
-
 void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length, ctst_balance_info* balance_info, size_t local_index) {
   if(balance_info->node==0) {
     balance_info->node=_ctst_new_node(ctst,bytes,bytes_index,bytes_length,balance_info->data,local_index);
@@ -307,9 +305,8 @@ ctst_node_ref _ctst_new_node(ctst_ctst* ctst, char* bytes, size_t bytes_index, s
     ctst_node_ref next;
 
     local_size = ctst_max_bytes_per_node;
-    next = _ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size);
-    // TODO : big bug here ! next is not used...
-    return ctst_storage_node_alloc(ctst->storage,0,bytes,bytes_index+local_index,local_size,0,0);    
+    next = _ctst_new_node(ctst,bytes,bytes_index,bytes_length,data,local_index+local_size+1);
+    return ctst_storage_node_alloc(ctst->storage,0,bytes,bytes_index+local_index,local_size,bytes[bytes_index+local_index+local_size],next);    
   }
   else {
     ctst->size++;

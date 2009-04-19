@@ -16,7 +16,7 @@
 #include <string.h>
 #include <assert.h>
 
-const size_t ctst_max_bytes_per_node = 1024; 
+const size_t ctst_max_bytes_per_node = 255; 
 
 struct struct_ctst_storage {
 	size_t node_count;
@@ -138,8 +138,8 @@ char ctst_storage_get_byte(ctst_storage* storage, ctst_node_ref node,size_t byte
 }
 
 void ctst_storage_load_bytes(ctst_storage* storage, ctst_node_ref node, char** bytes, size_t* bytes_length) {
-  *bytes = node->bytes;
-  *bytes_length = node->bytes_length;  
+	*bytes = node->bytes;
+	*bytes_length = node->bytes_length;
 }
 
 void ctst_storage_unload_bytes(ctst_storage* storage, ctst_node_ref node, char* bytes) {
@@ -313,29 +313,46 @@ ctst_data ctst_storage_visit_all(ctst_storage* storage, ctst_visitor_function vi
 
 void ctst_storage_debug_node(ctst_storage* storage, ctst_node_ref node, FILE* output, int start) {
 	if(start) {
-		fprintf(output,"digraph tst {\n");
+		fprintf(output,"digraph tst {\ngraph [overlap=false];\n");
 	}
 
-	// Build a NULL terminated string
-    char cstr[1024];
-    memcpy(cstr, node->bytes, sizeof(char)*node->bytes_length);
-    cstr[node->bytes_length] = '\0';
+	if(node) {
+		int type=0;
+		if(node->data) type+=4;
+		if(node->bytes_length) type+=2;
+		if(node->next_length) type+=1;
+		
+		fprintf(output, "N%lx [shape=record, label=\"{ %lx\\ntype=%i ",(unsigned long)node, (unsigned long)node, type);
+		
+		if(node->data) fprintf(output, " | data=%lx", (unsigned long)node->data);
+		
+		if(node->bytes_length > 0) {
+			// Build a NULL terminated string
+		    char cstr[10240];
+		    memcpy(cstr, node->bytes, sizeof(char)*node->bytes_length);
+		    cstr[node->bytes_length] = '\0';
+		 	fprintf(output, " | \\\"%s\\\"", cstr);
+		}
 
-	fprintf(output, "N%lx [shape=record, label=\"{ %lx | data=%lx | \\\"%s\\\" | { ", (unsigned long)node, (unsigned long)node, (unsigned long)node->data, cstr);
-	
-	int i,l;
-	for(i=0,l=node->next_length;i<l;i++) {
-		if(i>0) fprintf(output, " | ");
-		fprintf(output, "<P%i> %c",i,node->next_bytes[i]);
+		if(node->next_length > 0) {		
+			fprintf(output, " | {");
+			int i,l;
+			for(i=0,l=node->next_length;i<l;i++) {
+				if(i>0) fprintf(output, " | ");
+				fprintf(output, "<P%i> %c",i,node->next_bytes[i]);
+			}
+			fprintf(output, "}");
+		}
+				
+		fprintf(output, "}\"];\n");
+		
+		int i,l;
+		for(i=0,l=node->next_length;i<l;i++) {
+			ctst_storage_debug_node(storage, node->next_nodes[i], output, 0);		
+			fprintf(output, "N%lx:P%i -> N%lx;\n",(unsigned long)node,i,(unsigned long)node->next_nodes[i]);
+		}
 	}
-	
-	fprintf(output, "} }\"];\n");
-	
-	for(i=0,l=node->next_length;i<l;i++) {
-		ctst_storage_debug_node(storage, node->next_nodes[i], output, 0);		
-		fprintf(output, "N%lx:P%i -> N%lx;\n",(unsigned long)node,i,(unsigned long)node->next_nodes[i]);
-	}
-	
+		
 	if(start) {
 		fprintf(output,"}\n");
 	}

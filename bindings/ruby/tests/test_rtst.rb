@@ -11,7 +11,7 @@ class RTSTTests < Test::Unit::TestCase
       # 1000 unique, random strings
 	  @items = Set.new	  
 	  while @items.size < 1000
-	  	item = rand.to_s
+	  	item = rand.to_s + rand.to_s + rand.to_s + rand.to_s
 	  	@items << item
 	  end
 	  	  
@@ -67,16 +67,57 @@ class RTSTTests < Test::Unit::TestCase
 		assert_equal @removed.size, @items.size
 	end
 
+	def dump_tree(tree,filename)
+	    FileUtils.rm([filename,"#{filename}.png"], :force => true)
+	    tree.dump(filename)
+	    assert File.exists?(filename)
+	    system("dot -Gcharset=latin1 -Kdot -Tpng -O #{filename}")
+	    FileUtils.rm([filename])
+	end
+
+	def test_compacity
+	    words = %w{
+	    	compact
+	    	compacity
+	    	community
+	    	commuter
+	    	commuters
+	    	compute
+	    	compu
+	    }
+	    
+	    words.each do |word|
+	    	@tree.set word, 1
+	    end
+	    
+	    dump_tree @tree, "test_compacity.dot"
+	end
+
 	def test_dump_and_graphviz
-		@items.first(16).each do |item|
+		@items.first(20).each do |item|
 			@tree.set item, item
 	    end
 	    
-	    FileUtils.rm(["test_rtst_dump.dot","test_rtst_dump.dot.png"], :force => true)
-	    @tree.dump("test_rtst_dump.dot")
-	    assert File.exists?("test_rtst_dump.dot")
-	    system("dot -Kdot -Tpng -O test_rtst_dump.dot")
-	    FileUtils.rm(["test_rtst_dump.dot"])
-	    assert File.exists?("test_rtst_dump.dot.png")
-	end	
+	    dump_tree @tree, "test_rtst_dump.dot"
+	end
+	
+	def test_french_dictionary
+		@items = []
+		
+		words = IO.readlines("|zcat liste.de.mots.francais.frgut.txt.gz")
+		words.shuffle!
+			
+		words.first(32).each do |line|
+			line = line.strip
+			assert_nil @tree.set(line,line)
+		end
+
+	    dump_tree @tree, "francais.dot"
+
+		words.first(32).each do |line|
+			line = line.strip
+			assert_equal line, @tree.get(line)
+		end
+
+	end
 end
