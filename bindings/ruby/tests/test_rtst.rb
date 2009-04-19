@@ -77,19 +77,23 @@ class RTSTTests < Test::Unit::TestCase
 
 	def test_compacity
 	    words = %w{
-	    	compact
 	    	compacity
+	    	compact
+	    	compacted
 	    	community
 	    	commuter
 	    	commuters
 	    	compute
-	    	compu
 	    }
 	    
 	    words.each do |word|
-	    	@tree.set word, 1
+	    	assert_nil @tree.set(word, word)
 	    end
 	    
+	    words.each do |word|
+	    	assert_equal word, @tree.get(word)
+	    end
+
 	    dump_tree @tree, "test_compacity.dot"
 	end
 
