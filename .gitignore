@@ -1,5 +1,11 @@
-*.o
-*.so
 *~
-backup
-out
+
+# Visual Studio ignores
+[Dd]ebug
+[Bb]in
+[Oo]bj
+*.user
+*.suo
+*.sdf
+*.opensdf
+ipch/

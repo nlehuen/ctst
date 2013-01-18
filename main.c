@@ -8,7 +8,7 @@
 */
 #include <stdio.h>
 
-#include "include/ctst.h"
+#include "ctst.h"
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>

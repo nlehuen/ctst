@@ -312,12 +312,13 @@ ctst_data ctst_storage_visit_all(ctst_storage* storage, ctst_visitor_function vi
 }
 
 void ctst_storage_debug_node(ctst_storage* storage, ctst_node_ref node, FILE* output, int start) {
+	int i, l, type=0;
+
 	if(start) {
 		fprintf(output,"digraph tst {\ngraph [overlap=false];\n");
 	}
 
 	if(node) {
-		int type=0;
 		if(node->data) type+=4;
 		if(node->bytes_length) type+=2;
 		if(node->next_length) type+=1;
@@ -336,7 +337,6 @@ void ctst_storage_debug_node(ctst_storage* storage, ctst_node_ref node, FILE* ou
 
 		if(node->next_length > 0) {		
 			fprintf(output, " | {");
-			int i,l;
 			for(i=0,l=node->next_length;i<l;i++) {
 				if(i>0) fprintf(output, " | ");
 				fprintf(output, "<P%i> %c",i,node->next_bytes[i]);
@@ -346,7 +346,6 @@ void ctst_storage_debug_node(ctst_storage* storage, ctst_node_ref node, FILE* ou
 				
 		fprintf(output, "}\"];\n");
 		
-		int i,l;
 		for(i=0,l=node->next_length;i<l;i++) {
 			ctst_storage_debug_node(storage, node->next_nodes[i], output, 0);		
 			fprintf(output, "N%lx:P%i -> N%lx;\n",(unsigned long)node,i,(unsigned long)node->next_nodes[i]);
