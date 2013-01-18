@@ -6,12 +6,11 @@
 
   Main test file.
 */
-#include <stdio.h>
-
-#include "ctst.h"
 #include <assert.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#include <ctst.h>
 
 void load_test(ctst_ctst* ctst) {
   int i=0,l=0,c=10000;

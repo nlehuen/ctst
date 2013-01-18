@@ -14,6 +14,6 @@
 typedef struct struct_ctst_node ctst_node;
 typedef ctst_node* ctst_node_ref;
 
-#include "storage.h"
+#include <storage.h>
 
 #endif

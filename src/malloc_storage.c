@@ -13,8 +13,9 @@
   is to be a performance reference against which better implementation
   will be measured.
 */
-#include <string.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 const size_t ctst_max_bytes_per_node = 255; 
 

@@ -6,7 +6,6 @@ require 'rtst/version'
 # Copy source files
 require 'fileutils'
 FileUtils.cp_r '../../src/.', 'ext/rtst'
-FileUtils.rm 'ext/rtst/main.c'
 
 Gem::Specification.new do |gem|
   gem.name          = "rtst"

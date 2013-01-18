@@ -9,10 +9,8 @@
   This file contains general definitions
 */
 
-#include <stdlib.h>
-
 /* Define your ctst configuration in this file */
-#include "ctst_config.h"
+#include <ctst_config.h>
 
 struct struct_ctst_ctst {
   ctst_storage* storage;

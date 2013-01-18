@@ -9,7 +9,7 @@
   This file defines the storage interface.
 */
 
-#include "stdio.h"
+#include <stdio.h>
 
 /* This is the maximum number of bytes that can be stored
    in a single node. The exact value depends on the storage

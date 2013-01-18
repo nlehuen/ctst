@@ -6,9 +6,7 @@
 
   This file contains the implementation of the ctst.
 */
-#include "ctst.h"
-
-#include <string.h>
+#include <ctst.h>
 
 /* Private functions of this module */
 void _ctst_recursive_set(ctst_ctst* ctst, char* bytes, size_t bytes_index, size_t bytes_length,ctst_balance_info* balance_info, size_t local_index);
