@@ -8,6 +8,6 @@ extension_name = 'rtst'
 dir_config(extension_name,".")
 
 # Do the work
-with_cflags('-Wall -g') do
-	create_makefile(extension_name)
+with_cflags('-Wall -O3') do
+    create_makefile(extension_name)
 end
