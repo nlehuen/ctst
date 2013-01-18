@@ -1,6 +1,6 @@
-# Rtst
+# rtst
 
-TODO: Write a gem description
+`rtst` is a gem providing Ruby bindings to `ctst`.
 
 ## Installation
 
@@ -18,7 +18,24 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+require 'rubygems'
+require 'rtst'
+
+t = RTST.new
+
+# Set values
+t.set 'key1', 'Hello'
+t.set 'key2', 'World'
+
+# Get values
+puts "#{t.get('key1')} #{t.get('key2')}"
+
+# Iterate on keys (in alphabetical order)
+t.each do |key, value, distance|
+    puts "#{key}: #{value}"
+end
+```
 
 ## Contributing
 
