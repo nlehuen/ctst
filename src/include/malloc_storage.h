@@ -9,9 +9,11 @@
   This file defines special types for the storage implementation based on
   malloc/free.
 */
-
+#define CTST_STORAGE_TYPE_MALLOC_STORAGE
 
 typedef struct struct_ctst_node ctst_node;
 typedef ctst_node* ctst_node_ref;
+
+#include "storage.h"
 
 #endif

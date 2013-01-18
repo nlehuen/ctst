@@ -11,22 +11,8 @@
 
 #include <stdlib.h>
 
-#define CTST_STORAGE_TYPE_MALLOC_STORAGE
-
-// This is where you define the kind of data which is stored
-// in the tree
-#include "ruby.h"
-typedef VALUE ctst_data;
-
-#ifdef CTST_STORAGE_TYPE_MALLOC_STORAGE
-  #include "malloc_storage.h"
-#endif
-
-#ifdef CTST_STORAGE_TYPE_COMPACT_STORAGE
-  #include "compact_storage.h"
-#endif
-
-#include "storage.h"
+/* Define your ctst configuration in this file */
+#include "ctst_config.h"
 
 struct struct_ctst_ctst {
   ctst_storage* storage;
