@@ -2,17 +2,17 @@ require 'rubygems'
 require 'rtst'
 
 words = %w{
-colours
 colored
+colours
 comitee
-comitees
-compacity
-compact
-compacted
 community
 commuter
 commuters
+compacity
+compact
+compacted
 compute
+continuity
 }
 
 r = RTST.new
